@@ -544,4 +544,12 @@
 	<message key="notification.type.assignCopyeditors">Assign a copyeditor using the Add link in the Participants list.</message>
 	<message key="notification.type.awaitingCopyedits">Awaiting Copyedits.</message>
 	<message key="notification.type.roundStatusTitle">Round {$round} Status</message>
+
+	<!-- Navigation Menus -->
+	<message key="notification.editedNavigationMenuItem">Succesfully updated</message>
+	<message key="notification.removedNavigationMenuItem">Succesfully removed</message>
+	<message key="notification.addedNavigationMenuItem">Succesfully added</message>
+	<message key="notification.addedNavigationMenu">Succesfully added</message>
+	<message key="notification.editedNavigationMenu">Succesfully updated</message>
+	<message key="notification.removedNavigationMenu">Succesfully removed</message>
 </locale>
