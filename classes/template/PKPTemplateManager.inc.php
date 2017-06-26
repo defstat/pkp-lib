@@ -255,7 +255,7 @@ class PKPTemplateManager extends Smarty {
 			// Register Navigation Menus
 			if ($currentContext) {
 				$navigationMenuDao = DAORegistry::getDAO('NavigationMenuDAO');
-				$navigationMenus = $navigationMenuDao->getByContextId($currentContext->getId(), null, true);
+				$navigationMenus = $navigationMenuDao->getByContextId($currentContext->getId(), null);
 				$navigationMenusArray = $navigationMenus->toAssociativeArray();
 
 				foreach ($navigationMenusArray as $navigationMenu) {
@@ -1472,7 +1472,7 @@ class PKPTemplateManager extends Smarty {
 		$output = '';
 		if ($currentContext) {
 			$navigationMenuDao = DAORegistry::getDAO('NavigationMenuDAO');
-			$navigationMenu = $navigationMenuDao->getByArea($currentContext->getId(), $areaName, null); // null->true if only enabled NMs needed 
+			$navigationMenu = $navigationMenuDao->getByArea($currentContext->getId(), $areaName);
 
 			if (isset($navigationMenu)) {
 				$navigationMenu->populateNavigationMenuItems();
