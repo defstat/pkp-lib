@@ -14,6 +14,7 @@
  */
 
 import('lib.pkp.plugins.importexport.native.filter.NativeExportFilter');
+import('lib.pkp.classes.filter.GenericSchemaFilter');
 
 class SubmissionNativeXmlFilter extends NativeExportFilter {
 
@@ -55,9 +56,13 @@ class SubmissionNativeXmlFilter extends NativeExportFilter {
 		$doc->formatOutput = true;
 		$deployment = $this->getDeployment();
 
+		$genericSchemaFilter = new GenericSchemaFilter($deployment, "/xml/schema/submissions.xml");
+		//$genericSchemaFilter->exportEntity("submissions");
+
 		if (count($submissions)==1 && !$this->getIncludeSubmissionsNode()) {
 			// Only one submission specified; create root node
-			$rootNode = $this->createSubmissionNode($doc, $submissions[0]);
+			$rootNode = $genericSchemaFilter->exportEntity($doc, "submissions", $submissions);
+			//$rootNode = $this->createSubmissionNode($doc, $submissions[0]);
 		} else {
 			// Multiple submissions; wrap in a <submissions> element
 			$rootNode = $doc->createElementNS($deployment->getNamespace(), $deployment->getSubmissionsNodeName());
