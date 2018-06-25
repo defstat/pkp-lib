@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<filteringSchema>
+	<article class="classes.article.Article"
+					 schema="submissions"
+					 plural="articles"
+					 setting_schema="submission_settings"
+					 id="submission_id"
+					 single-class-name="Article"
+					 classDAO="ArticleDAO">
+		<authors link-type="author">
+			<getMethod>getAuthors</getMethod>
+		</authors>
+		
+	</article>
+	
+	<author multiple="true"
+					class="classes.article.Author"
+					schema="authors"
+					setting_schema="author_settings">
+	</author>
+</filteringSchema>

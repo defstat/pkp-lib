@@ -14,12 +14,17 @@ class GenericSchemaFilter extends NativeExportFilter {
 
 	var $SCHEMA_CONTEXT = "/dbscripts/xml/ojs_schema.xml";
 	var $SCHEMA_GL = "/xml/schema/submissions.xml";
-	//var $SCHEMA_GL = "/xml/schema";
+	var $ENTITYLINK_SCHEMA = "/classes/filter/GenericFilteringSchema.xml";
 
 	/**
 	 * @var XMLNode
 	 */
 	var $_treeGlobal;
+
+	/**
+	 * @var XMLNode
+	 */
+	var $_entityLinksGlobal;
 
 	/**
 	 * Constructor
@@ -28,6 +33,7 @@ class GenericSchemaFilter extends NativeExportFilter {
 		// Read the XML schema
 		$xmlParser = new XMLParser();
 		$schemaGlobalFile = Core::getBaseDir() . '/' . PKP_LIB_PATH . $this->SCHEMA_GL;
+		$entityLinkFile = Core::getBaseDir() . '/' . PKP_LIB_PATH . $this->ENTITYLINK_SCHEMA;
 		$schemaContextFile = Core::getBaseDir() . $this->SCHEMA_CONTEXT;
 
 		$treeGlobal = $xmlParser->parse($schemaGlobalFile);
@@ -44,19 +50,26 @@ class GenericSchemaFilter extends NativeExportFilter {
 
 		$this->_treeGlobal = $treeGlobal;
 
-		$this->_entitySchema = $entitySchema;
+		$entityLinksTree = $xmlParser->parse($entityLinkFile);
+		$this->_entityLinksGlobal = $entityLinksTree;
 
+		$this->_entitySchema = $entitySchema;
 		$this->_deployment = $deployment;
 	}
 
 	function exportEntity($doc, $entityName, $entityArray) {
-		$entityNameSingular = "submission";
-		$entityIdColumnName = $entityNameSingular. "_id";
-		$entitySettingsName = $entityNameSingular. "_settings";
-		$entityClass = "classes.article.Article";
-		$entityClassName = "Article";
+		/**
+		 * @var $entityRefNode XMLNode
+		 */
+		$entityRefNode = $this->_entityLinksGlobal->getChildByName($entityName);	/** @var $entityRefNode XMLNode */
 
-		$entityDAOClassName = "ArticleDAO";
+		$schema = $entityRefNode->getAttribute('schema');
+		$entityClass = $entityRefNode->getAttribute('class');
+		$entitySettingsName = $entityRefNode->getAttribute('setting_schema');
+		$entityPlural = $entityRefNode->getAttribute('plural');
+		$entityIdColumnName = $entityRefNode->getAttribute('id');
+		$entityClassName = $entityRefNode->getAttribute('single-class-name');
+		$entityDAOClassName = $entityRefNode->getAttribute('classDAO');
 
 		import($entityClass);
 
@@ -64,7 +77,7 @@ class GenericSchemaFilter extends NativeExportFilter {
 		/**
 		 * @var $entityNode XMLNode
 		 */
-		$entityNode = $this->_treeGlobal->getChildByName($entityName);
+		$entityNode = $this->_treeGlobal->getChildByName($schema);
 
 		/**
 		 * @var $children array
@@ -74,7 +87,7 @@ class GenericSchemaFilter extends NativeExportFilter {
 		/**
 		 * @var $child XMLNode
 		 */
-		$submissionNode = $doc->createElementNS("test", $entityNameSingular);
+		$entityExportNode = $doc->createElementNS("test", $entityName);
 
 		foreach ($entityArray as $entity) {
 
@@ -84,11 +97,11 @@ class GenericSchemaFilter extends NativeExportFilter {
 				$childName = $child->getName();
 				if ($childName == 'field' && $columnName) {
 					if ($entityIdColumnName == $columnName) {
-						$submissionNode->setAttribute("old_id", $entity->getId());
+						$entityExportNode->setAttribute("old_id", $entity->getId());
 					} else {
 						$getterFunctionName = 'get'.$this->reNameColumn($columnName);
 						if (method_exists($entity, $getterFunctionName)){
-							$submissionNode->setAttribute($columnName, $entity->$getterFunctionName());
+							$entityExportNode->setAttribute($columnName, $entity->$getterFunctionName());
 						} else {
 							// ADD WARNING
 						}
@@ -105,7 +118,7 @@ class GenericSchemaFilter extends NativeExportFilter {
 			foreach ($localisedFields as $localisedField) {
 				$getterFunctionName = 'get'.$this->reNameColumn($localisedField);
 				if (method_exists($entity, $getterFunctionName)){
-					$this->createLocalizedNodes($doc, $submissionNode, $localisedField, $entity->$getterFunctionName(null));
+					$this->createLocalizedNodes($doc, $entityExportNode, $localisedField, $entity->$getterFunctionName(null));
 				} else {
 					// ADD WARNING
 				}
@@ -120,14 +133,14 @@ class GenericSchemaFilter extends NativeExportFilter {
 				if ($isTwoPartField) {
 					$getterFunctionName = $isTwoPartField[0];
 					if (method_exists($entity, $getterFunctionName)){
-						$submissionNode->appendChild($node = $doc->createElementNS($this->_deployment->getNamespace(), 'id', $entity->$getterFunctionName($isTwoPartField[1])));
+						$entityExportNode->appendChild($childnode = $doc->createElementNS($this->_deployment->getNamespace(), 'id', $entity->$getterFunctionName($isTwoPartField[1])));
 					} else {
 						// ADD WARNING
 					}
 				} else {
 					$getterFunctionName = 'get'.$this->reNameColumn($additionalField);
 					if (method_exists($entity, $getterFunctionName)){
-						$submissionNode->appendChild($node = $doc->createElementNS($this->_deployment->getNamespace(), $additionalField, $entity->$getterFunctionName()));
+						$entityExportNode->appendChild($childnode = $doc->createElementNS($this->_deployment->getNamespace(), $additionalField, $entity->$getterFunctionName()));
 					} else {
 						// ADD WARNING
 					}
@@ -135,13 +148,24 @@ class GenericSchemaFilter extends NativeExportFilter {
 			}
 		}
 
+		$this->exportChildren($doc, $entityExportNode, $entityRefNode->getChildren());
 
-		$doc->appendChild($submissionNode);
-		$submissionNode->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-		$submissionNode->setAttribute('xsi:schemaLocation', "test");
+		$doc->appendChild($entityExportNode);
+		$entityExportNode->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+		$entityExportNode->setAttribute('xsi:schemaLocation', "test");
 
 		return $doc;
 
+	}
+
+	function exportChildren($doc, $node, $entityChildren) {
+
+		foreach($entityChildren as $entityChild){	 /** @var $entityChild XMLNode */
+			exportEntity($doc, $node, $entityChild->getName())
+		}
+		$childNode = $this->_entityLinksGlobal->getChildByName($entityName);
+
+		return $node;
 	}
 
 	function reNameColumn($name, $char = '_') {

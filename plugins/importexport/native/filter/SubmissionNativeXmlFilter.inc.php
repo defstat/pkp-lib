@@ -61,7 +61,7 @@ class SubmissionNativeXmlFilter extends NativeExportFilter {
 
 		if (count($submissions)==1 && !$this->getIncludeSubmissionsNode()) {
 			// Only one submission specified; create root node
-			$rootNode = $genericSchemaFilter->exportEntity($doc, "submissions", $submissions);
+			$rootNode = $genericSchemaFilter->exportEntity($doc, "article", $submissions);
 			//$rootNode = $this->createSubmissionNode($doc, $submissions[0]);
 		} else {
 			// Multiple submissions; wrap in a <submissions> element
