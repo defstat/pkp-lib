@@ -8,8 +8,9 @@
 					 id="submission_id"
 					 single-class-name="Article"
 					 classDAO="ArticleDAO">
-		<authors link-type="author">
-			<getMethod>getAuthors</getMethod>
+		<authors link-type="author"
+						 getMethod="getAuthors">
+			<getMethodParameters></getMethodParameters>
 		</authors>
 		
 	</article>
@@ -17,6 +18,15 @@
 	<author multiple="true"
 					class="classes.article.Author"
 					schema="authors"
-					setting_schema="author_settings">
+					setting_schema="author_settings"
+					single-class-name="Author"
+					classDAO="AuthorDAO">
 	</author>
+	<representation multiple="true"
+					class="lib.pkp.classes.submission.Representation"
+					schema="authors"
+					setting_schema="author_settings"
+					single-class-name="Author"
+					classDAO="RepresentationDAO">
+	</representation>
 </filteringSchema>

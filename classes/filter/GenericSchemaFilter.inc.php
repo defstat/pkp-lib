@@ -57,7 +57,25 @@ class GenericSchemaFilter extends NativeExportFilter {
 		$this->_deployment = $deployment;
 	}
 
-	function exportEntity($doc, $entityName, $entityArray) {
+	function process($doc, $entityName, $entityArray, $parentNode = null) {
+		/**
+		 * @var $child XMLNode
+		 */
+		$entityExportNode = $doc->createElementNS("test", $entityName);
+
+		foreach ($entityArray as $entity) {
+			$this->exportEntity($doc, $entityExportNode, $entityName, $entity);
+		}
+
+		$doc->appendChild($entityExportNode);
+		$entityExportNode->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+		$entityExportNode->setAttribute('xsi:schemaLocation', "test");
+
+		return $doc;
+
+	}
+
+	function exportEntity($doc, $entityExportNode, $entityName, $entity) {
 		/**
 		 * @var $entityRefNode XMLNode
 		 */
@@ -84,88 +102,79 @@ class GenericSchemaFilter extends NativeExportFilter {
 		 */
 		$children = $entityNode->getChildren();
 
-		/**
-		 * @var $child XMLNode
-		 */
-		$entityExportNode = $doc->createElementNS("test", $entityName);
-
-		foreach ($entityArray as $entity) {
-
-			// Add main DB Attributes
-			foreach($children as $child) {
-				$columnName = $child->getAttribute('name');
-				$childName = $child->getName();
-				if ($childName == 'field' && $columnName) {
-					if ($entityIdColumnName == $columnName) {
-						$entityExportNode->setAttribute("old_id", $entity->getId());
+		// Add main DB Attributes
+		foreach($children as $child) {
+			$columnName = $child->getAttribute('name');
+			$childName = $child->getName();
+			if ($childName == 'field' && $columnName) {
+				if ($child->getChildByName('KEY')) {
+					$entityExportNode->setAttribute("old_id", $entity->getId());
+				} else {
+					$getterFunctionName = 'get'.$this->reNameColumn($columnName);
+					if (method_exists($entity, $getterFunctionName)){
+						$entityExportNode->setAttribute($columnName, $entity->$getterFunctionName());
 					} else {
-						$getterFunctionName = 'get'.$this->reNameColumn($columnName);
-						if (method_exists($entity, $getterFunctionName)){
-							$entityExportNode->setAttribute($columnName, $entity->$getterFunctionName());
-						} else {
-							// ADD WARNING
-						}
+						// ADD WARNING
 					}
 				}
 			}
+		}
 
-			// Get EntityDAO class
-			$entityDao = DAORegistry::getDAO($entityDAOClassName);
+		// Get EntityDAO class
+		$entityDao = DAORegistry::getDAO($entityDAOClassName);
 
-			// Add localised settings
-			$localisedFields = $entityDao->getLocaleFieldNames();
+		// Add localised settings
+		$localisedFields = $entityDao->getLocaleFieldNames();
 
-			foreach ($localisedFields as $localisedField) {
-				$getterFunctionName = 'get'.$this->reNameColumn($localisedField);
+		foreach ($localisedFields as $localisedField) {
+			$getterFunctionName = 'get'.$this->reNameColumn($localisedField);
+			if (method_exists($entity, $getterFunctionName)){
+				$this->createLocalizedNodes($doc, $entityExportNode, $localisedField, $entity->$getterFunctionName(null));
+			} else {
+				// ADD WARNING
+			}
+
+		}
+
+		// Add additional settings
+		$additionalFields = $entityDao->getAdditionalFieldNames();
+		foreach ($additionalFields as $additionalField) {
+			$isTwoPartField = $this->checkIfColumnTwoParts($additionalField);
+
+			if ($isTwoPartField) {
+				$getterFunctionName = $isTwoPartField[0];
 				if (method_exists($entity, $getterFunctionName)){
-					$this->createLocalizedNodes($doc, $entityExportNode, $localisedField, $entity->$getterFunctionName(null));
+					$entityExportNode->appendChild($childnode = $doc->createElementNS($this->_deployment->getNamespace(), 'id', $entity->$getterFunctionName($isTwoPartField[1])));
 				} else {
 					// ADD WARNING
 				}
-
-			}
-
-			// Add additional settings
-			$additionalFields = $entityDao->getAdditionalFieldNames();
-			foreach ($additionalFields as $additionalField) {
-				$isTwoPartField = $this->checkIfColumnTwoParts($additionalField);
-
-				if ($isTwoPartField) {
-					$getterFunctionName = $isTwoPartField[0];
-					if (method_exists($entity, $getterFunctionName)){
-						$entityExportNode->appendChild($childnode = $doc->createElementNS($this->_deployment->getNamespace(), 'id', $entity->$getterFunctionName($isTwoPartField[1])));
-					} else {
-						// ADD WARNING
-					}
+			} else {
+				$getterFunctionName = 'get'.$this->reNameColumn($additionalField);
+				if (method_exists($entity, $getterFunctionName)){
+					$entityExportNode->appendChild($childnode = $doc->createElementNS($this->_deployment->getNamespace(), $additionalField, $entity->$getterFunctionName()));
 				} else {
-					$getterFunctionName = 'get'.$this->reNameColumn($additionalField);
-					if (method_exists($entity, $getterFunctionName)){
-						$entityExportNode->appendChild($childnode = $doc->createElementNS($this->_deployment->getNamespace(), $additionalField, $entity->$getterFunctionName()));
-					} else {
-						// ADD WARNING
-					}
+					// ADD WARNING
 				}
 			}
 		}
 
-		$this->exportChildren($doc, $entityExportNode, $entityRefNode->getChildren());
+		$newdoc = new DOMDocument();
+    $cloned = $entityExportNode->cloneNode(true);
+    $newdoc->appendChild($newdoc->importNode($cloned, true));
 
-		$doc->appendChild($entityExportNode);
-		$entityExportNode->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-		$entityExportNode->setAttribute('xsi:schemaLocation', "test");
-
-		return $doc;
-
+		$this->exportChildren($doc, $entityExportNode, $entity, $entityRefNode);
 	}
 
-	function exportChildren($doc, $node, $entityChildren) {
+	function exportChildren($doc, $parentNode, $parentEntity, $entityRefNode) {
+		foreach($entityRefNode->getChildren() as $entityChild) {
+			$getMethod = $entityChild->getAttribute('getMethod');
+			$getElement = $entityChild->getAttribute('link-type');
 
-		foreach($entityChildren as $entityChild){	 /** @var $entityChild XMLNode */
-			exportEntity($doc, $node, $entityChild->getName())
+			$childrenEntities = $parentEntity->$getMethod();
+			$this->process($doc, $getElement, $childrenEntities, $parentNode);
 		}
-		$childNode = $this->_entityLinksGlobal->getChildByName($entityName);
 
-		return $node;
+		return $parentNode;
 	}
 
 	function reNameColumn($name, $char = '_') {
