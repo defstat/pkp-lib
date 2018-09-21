@@ -125,7 +125,10 @@ class ManageAnnouncementGridHandler extends AnnouncementGridHandler {
 		$context = $request->getContext();
 		$announcementForm = new AnnouncementForm($context->getId(), (int) $request->getUserVar('announcementId'));
 		$announcementForm->initData();
-		return new JSONMessage(true, $announcementForm->fetch($request));
+		$json = new JSONMessage(true, $announcementForm->fetch($request));
+		$json->setGlobalEvent('announcementAdded');
+		return $json;
+		// return new JSONMessage(true, $announcementForm->fetch($request));
 	}
 
 	/**
@@ -158,8 +161,10 @@ class ManageAnnouncementGridHandler extends AnnouncementGridHandler {
 			$user = $request->getUser();
 			$notificationManager->createTrivialNotification($user->getId(), NOTIFICATION_TYPE_SUCCESS, array('contents' => __($notificationLocaleKey)));
 
+			$json = DAO::getDataChangedEvent($announcementId);
+			$json->setGlobalEvent('announcementAdded');
 			// Prepare the grid row data.
-			return DAO::getDataChangedEvent($announcementId);
+			return $json;
 		}
 		return new JSONMessage(false);
 	}

@@ -29,12 +29,33 @@ class PKPAnnouncementsListHandler extends ListHandler {
 			$config['itemsMax'] = $this->getItemsMax();
 		}
 
-		$config['apiPath'] = $this->_apiPath;
+		$config['apiPath'] = 'announcements';
 
 		$config['count'] = $this->_count;
 		$config['page'] = 1;
 
 		$config['getParams'] = $this->_getParams;
+
+		$request = Application::getRequest();
+		$router = $request->getRouter();
+
+		$config['editUrl'] = $request->getDispatcher()->url(
+			$request,
+			ROUTE_COMPONENT,
+			null,
+			'grid.announcements.ManageAnnouncementGridHandler',
+			'editAnnouncement',
+			null,
+			array('announcementId' => '__id__')
+		);
+
+		$config['addUrl'] = $request->getDispatcher()->url(
+			$request,
+			ROUTE_COMPONENT,
+			null,
+			'grid.announcements.ManageAnnouncementGridHandler',
+			'addAnnouncement'
+		);
 
 		// Attach a CSRF token for post requests
 		$config['csrfToken'] = Application::getRequest()->getSession()->getCSRFToken();
@@ -52,6 +73,9 @@ class PKPAnnouncementsListHandler extends ListHandler {
 			'delete' => __('common.delete'),
 			'viewMore' => __('list.viewMore'),
 			'viewLess' => __('list.viewLess'),
+			'edit' => __('grid.action.edit'),
+			'delete' => __('grid.action.remove'),
+			'datePosted' => __('announcement.posted'),
 		);
 
 		return $config;
