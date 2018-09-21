@@ -64,7 +64,7 @@ class UserService extends PKPBaseEntityPropertyService {
 	/**
 	 * Get max count of users matching a query request
 	 *
-	 * @see self::getSubmissions()
+	 * @see self::getUsers()
 	 * @return int
 	 */
 	public function getUsersMaxCount($contextId, $args = array()) {

@@ -350,5 +350,3 @@ class AnnouncementDAO extends DAO {
 		return $this->_getInsertId('announcements', 'announcement_id');
 	}
 }
-
-
