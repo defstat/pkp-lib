@@ -73,7 +73,7 @@ class PKPAnnouncementHandler extends APIHandler {
 
 		foreach ($requestParams as $param => $val) {
 			switch ($param) {
-				case 'type':
+				case 'typeId':
 					if (is_string($val) && strpos($val, ',') > -1) {
 						$val = explode(',', $val);
 					} elseif (!is_array($val)) {

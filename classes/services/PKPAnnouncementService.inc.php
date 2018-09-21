@@ -79,7 +79,7 @@ class PKPAnnouncementService extends PKPBaseEntityPropertyService {
 	private function _buildGetAnnouncementsQueryObject($contextId, $args = array()) {
 
 		$defaultArgs = array(
-			'type' => null,
+			'typeId' => null,
 			'searchPhrase' => null,
 			'count' => 20,
 			'offset' => 0,
@@ -89,7 +89,7 @@ class PKPAnnouncementService extends PKPBaseEntityPropertyService {
 
 		$announcementListQB = new QueryBuilders\AnnouncementListQueryBuilder($contextId);
 		$announcementListQB
-			->filterByType($args['type'])
+			->filterByTypeId($args['typeId'])
 			->searchPhrase($args['searchPhrase']);
 
 		\HookRegistry::call('Announcement::getAnnouncements::queryBuilder', array($announcementListQB, $contextId, $args));
