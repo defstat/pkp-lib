@@ -45,5 +45,12 @@
 	{capture assign=announcementGridUrl}{url router=$smarty.const.ROUTE_COMPONENT component="grid.announcements.ManageAnnouncementGridHandler" op="fetchGrid" escape=false}{/capture}
 	{load_url_in_div id="announcementGridContainer" url=$announcementGridUrl}
 
+	{assign var="uuid" value=""|uniqid|escape}
+	<div id="announcements-list-handler-{$uuid}">
+		<script type="text/javascript">
+			pkp.registry.init('announcements-list-handler-{$uuid}', 'AnnouncementsListPanel', {$announcementsListData});
+		</script>
+	</div>
+
 	{fbvFormButtons id="announcementSettingsFormSubmit" submitText="common.save" hideCancel=true}
 </form>

@@ -14,6 +14,7 @@
  */
 
 import('lib.pkp.classes.controllers.tab.settings.form.ContextSettingsForm');
+import('lib.pkp.controllers.list.announcements.PKPAnnouncementsListHandler');
 
 class AnnouncementSettingsForm extends ContextSettingsForm {
 
@@ -59,8 +60,12 @@ class AnnouncementSettingsForm extends ContextSettingsForm {
 			'disableAnnouncementsHomepage' => !$this->getData('enableAnnouncementsHomepage')
 		);
 
+		$announcementsListHandler = new PKPAnnouncementsListHandler(array(
+			'title' => 'manager.setup.announcements',
+		));
+		$templateMgr = TemplateManager::getManager($request);
+		$templateMgr->assign('announcementsListData', json_encode($announcementsListHandler->getConfig()));
+
 		return parent::fetch($request, $template, $display, $params);
 	}
 }
-
-

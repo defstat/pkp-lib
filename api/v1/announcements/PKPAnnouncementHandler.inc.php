@@ -109,7 +109,7 @@ class PKPAnnouncementHandler extends APIHandler {
 		}
 
 		$data = [
-			'itemsMax' => $announcementService->getAnnouncementsMax($context->getId(), $params),
+			'itemsMax' => $announcementService->getAnnouncementsMaxCount($context->getId(), $params),
 			'items' => $items,
 		];
 

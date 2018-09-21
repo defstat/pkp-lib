@@ -59,7 +59,7 @@ class PKPAnnouncementService extends PKPBaseEntityPropertyService {
 	 * @see self::getAnnouncements()
 	 * @return int
 	 */
-	public function getAnnouncementsMax($contextId, $args = array()) {
+	public function getAnnouncementsMaxCount($contextId, $args = array()) {
 		$announcementsListQB = $this->_buildGetAnnouncementsQueryObject($contextId, $args);
 		$countQO = $announcementsListQB->countOnly()->get();
 		$countRange = new DBResultRange($args['count'], 1);
