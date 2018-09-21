@@ -57,10 +57,6 @@ class PKPAnnouncementHandler extends APIHandler {
 		$context = $request->getContext();
 		$announcementService = ServicesContainer::instance()->get('announcement');
 
-		if (!$context) {
-			return $response->withStatus(404)->withJsonError('api.submissions.404.resourceNotFound');
-		}
-
 		// Merge query params over default params
 		$defaultParams = array(
 			'count' => 20,
@@ -73,7 +69,7 @@ class PKPAnnouncementHandler extends APIHandler {
 
 		foreach ($requestParams as $param => $val) {
 			switch ($param) {
-				case 'typeId':
+				case 'type':
 					if (is_string($val) && strpos($val, ',') > -1) {
 						$val = explode(',', $val);
 					} elseif (!is_array($val)) {

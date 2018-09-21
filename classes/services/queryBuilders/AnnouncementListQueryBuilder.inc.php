@@ -31,7 +31,7 @@ class AnnouncementListQueryBuilder extends BaseQueryBuilder {
 	protected $orderDirection = 'DESC';
 
 	/** @var integer  */
-	protected $typeId = null;
+	protected $typeIds = null;
 
 	/** @var string search phrase */
 	protected $searchPhrase = null;
@@ -50,14 +50,14 @@ class AnnouncementListQueryBuilder extends BaseQueryBuilder {
 	}
 
 	/**
-	 * Set typeId filter
+	 * Set type filter
 	 *
-	 * @param $typeId integer
+	 * @param $typeIds integer
 	 *
 	 * @return \PKP\Services\QueryBuilders\AnnouncementListQueryBuilder
 	 */
-	public function filterByTypeId($typeId) {
-		$this->typeId = $typeId;
+	public function filterByType($typeIds) {
+		$this->typeIds = $typeIds;
 		return $this;
 	}
 
@@ -100,8 +100,8 @@ class AnnouncementListQueryBuilder extends BaseQueryBuilder {
 					->where('a.assoc_type', '=', \Application::getContextAssocType());
 
 		// types
-		if (!is_null($this->typeId)) {
-			$q->whereIn('a.type_id', $this->typeId);
+		if (!is_null($this->typeIds)) {
+			$q->whereIn('a.type_id', $this->typeIds);
 		}
 
 		// search phrase
