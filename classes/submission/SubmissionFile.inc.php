@@ -670,6 +670,14 @@ class SubmissionFile extends PKPFile {
 	function getDAO() {
 		return DAORegistry::getDAO('SubmissionFileDAO');
 	}
+
+	function getSubmissionVersion() {
+		return $this->getData('submissionVersion');
+	}
+
+	function setSubmissionVersion($submissionVersion) {
+		$this->setData('submissionVersion', $submissionVersion);
+	}
 }
 
 

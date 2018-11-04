@@ -51,5 +51,3 @@ class VersioningRequiredPolicy extends DataObjectRequiredPolicy {
 		return AUTHORIZATION_PERMIT;
 	}
 }
-
-?>

@@ -53,6 +53,7 @@
 		<field name="uploader_user_id" type="I8" />
 		<field name="assoc_type" type="I8"/>
 		<field name="assoc_id" type="I8"/>
+		<field name="submission_version" type="I8" />
 		<descr>Files associated with submission. Includes submission files, etc.</descr>
 		<index name="submission_files_submission_id">
 			<col>submission_id</col>

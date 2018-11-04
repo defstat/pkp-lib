@@ -126,8 +126,6 @@ class PKPVersioningTabHandler extends Handler {
 		$templateMgr->assign('submissionVersion', $submissionVersionId);
 		$templateMgr->assign('isPublished', $submissionVersion->getDatePublished() ? true : false);
 
-		return $templateMgr->fetchJson('workflow/version.tpl');
+		return $templateMgr->fetchJson('controllers/tab/workflow/version.tpl');
 	}
 }
-
-?>
