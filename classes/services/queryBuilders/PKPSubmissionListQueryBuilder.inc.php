@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @file classes/services/QueryBuilders/PKPSubmissionListQueryBuilder.php
+ * @file classes/services/QueryBuilders/PKPSubmissionListQueryBuilder.inc.php
  *
  * Copyright (c) 2014-2018 Simon Fraser University
  * Copyright (c) 2000-2018 John Willinsky
@@ -54,6 +54,8 @@ abstract class PKPSubmissionListQueryBuilder extends BaseQueryBuilder {
 
 	/** @var bool|null whether to return only submissions with overdue review assignments */
 	protected $isOverdue = false;
+
+	protected $submissionVersion = null;
 
 	/**
 	 * Constructor
@@ -210,7 +212,10 @@ abstract class PKPSubmissionListQueryBuilder extends BaseQueryBuilder {
 		if ($this->returnObject === SUBMISSION_RETURN_PUBLISHED) {
 			$this->columns[] = 'ps.*';
 			$q->leftJoin('published_submissions as ps','ps.submission_id','=','s.submission_id')
-				->groupBy('ps.date_published');
+				->leftJoin('submission_settings as st', 'ps.submission_id', '=', 's.submission_id')
+				->where('st.setting_name', '=', 'datePublished')
+				->where('ps.is_current_submission_version', '=', '1')
+				->groupBy('st.setting_value');
 			$q->whereNotNull('ps.pub_id');
 			$q->groupBy('ps.pub_id');
 		}
@@ -219,9 +224,12 @@ abstract class PKPSubmissionListQueryBuilder extends BaseQueryBuilder {
 		if (!is_null($this->statuses)) {
 			import('lib.pkp.classes.submission.Submission'); // STATUS_ constants
 			if (in_array(STATUS_PUBLISHED, $this->statuses) && $this->returnObject !== SUBMISSION_RETURN_PUBLISHED) {
-				$this->columns[] = 'ps.date_published';
+				$this->columns[] = 'st.setting_value';
 				$q->leftJoin('published_submissions as ps','ps.submission_id','=','s.submission_id')
-					->groupBy('ps.date_published');
+				->leftJoin('submission_settings as st', 'ps.submission_id', '=', 's.submission_id')
+				->where('st.setting_name', '=', 'datePublished')
+				->where('ps.is_current_submission_version', '=', '1')
+				->groupBy('st.setting_value');
 			}
 			$q->whereIn('s.status', $this->statuses);
 		}
