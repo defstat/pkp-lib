@@ -116,7 +116,7 @@ class SubmissionVersionedDAO extends DAO {
 	function getBySubmission($submission) {
 		if (!$submission) return null;
 
-		return $this->getBySubmissionId($submission->getId(), $submission->getSubmissionVersion());
+		return $this->getBySubmissionId($submission->getId(), null, $submission->getSubmissionVersion());
 	}
 
 	////////////////////////////////////////////////////-------------------------///////////////////////////////////////////////

@@ -57,6 +57,9 @@ abstract class RepresentationDAO extends SubmissionVersionedDAO implements ISubm
 			$representation->setIsCurrentSubmissionVersion(false);
 			$this->updateObject($representation);
 
+			$representation->setIsApproved(false);
+			$representation->setIsAvailable(0);
+
 			$representation->setIsCurrentSubmissionVersion(true);
 			$representation->setSubmissionVersion($newVersion);
 			$representation->setPrevVerAssocId($oldRepresentationId);
@@ -78,6 +81,10 @@ abstract class RepresentationDAO extends SubmissionVersionedDAO implements ISubm
 			foreach ($representationFiles as $representationFile) {
 				/** @var $representationFile SubmissionFile */
 				$representationFile->setAssocId($representation->getId());
+				$representationFile->setSalesType(null);
+				$representationFile->setDirectSalesPrice(null);
+				$representationFile->setViewable(false);
+
 				$submissionFileDao->updateObject($representationFile);
 			}
 		}
