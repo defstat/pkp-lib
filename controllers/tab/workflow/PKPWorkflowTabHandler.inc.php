@@ -63,7 +63,7 @@ abstract class PKPWorkflowTabHandler extends Handler {
 		$stageId = $this->getAuthorizedContextObject(ASSOC_TYPE_WORKFLOW_STAGE);
 		$templateMgr->assign('stageId', $stageId);
 
-		$submission = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION);
+		$submission = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION); /** @var $submission Submission */
 		$templateMgr->assign('submission', $submission);
 
 		switch ($stageId) {
@@ -153,7 +153,10 @@ abstract class PKPWorkflowTabHandler extends Handler {
 				$currentSubmissionVersion = $submission->getCurrentSubmissionVersion();
 				$templateMgr->assign('currentSubmissionVersion', $currentSubmissionVersion);
 
-				if ($submission->getDatePublished()){
+				$publishedSubmissionDao = Application::getPublishedSubmissionDAO(); /** @var $publishedSubmissionDao PublishedArticleDAO */
+				$publishedArticle = $publishedSubmissionDao->getByArticleId($submission->getId(), $submission->getContextId(), false, $currentSubmissionVersion);
+
+				if ($publishedArticle){
 
 					$dispatcher = $request->getDispatcher();
 					import('lib.pkp.classes.linkAction.request.AjaxAction');

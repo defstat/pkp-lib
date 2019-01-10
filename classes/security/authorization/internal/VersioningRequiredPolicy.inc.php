@@ -16,6 +16,7 @@ import('lib.pkp.classes.security.authorization.DataObjectRequiredPolicy');
 
 class VersioningRequiredPolicy extends DataObjectRequiredPolicy {
 	var $_submission = null;
+	var $_lookOnlyByParameterName = false;
 
 	/**
 	 * Constructor
@@ -24,8 +25,10 @@ class VersioningRequiredPolicy extends DataObjectRequiredPolicy {
 	 * @param $parameterName string the request parameter we expect the submission version in.
 	 * @param $operations array Optional list of operations for which this check takes effect. If specified, operations outside this set will not be checked against this policy.
 	 */
-	function __construct($request, &$args, $parameterName = 'submissionVersion', $operations = null) {
+	function __construct($request, &$args, $parameterName = 'submissionVersion', $operations = null, $lookOnlyByParameterName = false) {
 		parent::__construct($request, $args, $parameterName, 'user.authorization.invalidSubmissionVersion', $operations);
+
+		$this->_lookOnlyByParameterName = $lookOnlyByParameterName;
 	}
 
 	//
@@ -43,7 +46,7 @@ class VersioningRequiredPolicy extends DataObjectRequiredPolicy {
 		if (!is_a($submission, 'Submission')) return AUTHORIZATION_DENY;
 
 		// Get the submission version id.
-		$submissionVersion = $this->getDataObjectId();
+		$submissionVersion = $this->getDataObjectId($this->_lookOnlyByParameterName);
 		if ($submissionVersion === false)
 			$submissionVersion = $submission->getSubmissionVersion();
 

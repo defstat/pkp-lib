@@ -41,7 +41,7 @@ class WorkflowStageAccessPolicy extends ContextPolicy {
 		$this->addPolicy($submissionRequiredPolicy);
 
 		import('lib.pkp.classes.security.authorization.internal.VersioningRequiredPolicy');
-		$this->addPolicy(new VersioningRequiredPolicy($request, $args));
+		$this->addPolicy(new VersioningRequiredPolicy($request, $args, 'submissionVersion', null, true));
 
 		import('lib.pkp.classes.security.authorization.internal.UserAccessibleWorkflowStageRequiredPolicy');
 		$this->addPolicy(new UserAccessibleWorkflowStageRequiredPolicy($request, $workflowType));

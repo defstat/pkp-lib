@@ -58,6 +58,10 @@ class SubmissionVersionedDataObject extends DataObject {
 	}
 
 	function getIsCurrentSubmissionVersion() {
+		if (is_null($this->getData('isCurrentSubmissionVersion'))) {
+			$this->setIsCurrentSubmissionVersion(true);
+		}
+
 		return $this->getData('isCurrentSubmissionVersion');
 	}
 

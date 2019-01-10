@@ -161,10 +161,10 @@ abstract class PKPSubmissionFileDAO extends SubmissionVersionedDAO implements PK
 	 * @param $submissionId int (optional) for validation purposes only
 	 * @return SubmissionFile|null
 	 */
-	function getLatestRevision($fileId, $fileStage = null, $submissionId = null, $submissionVersion = null) {
+	function getLatestRevision($fileId, $fileStage = null, $submissionId = null) {
 		if (!$fileId) return null;
 
-		$revisions = $this->_getInternally($submissionId, $fileStage, $fileId, null, null, null, null, null, null, true, null, $submissionVersion);
+		$revisions = $this->_getInternally($submissionId, $fileStage, $fileId, null, null, null, null, null, null, true, null, null);
 		return $this->_checkAndReturnRevision($revisions);
 	}
 
@@ -881,7 +881,7 @@ abstract class PKPSubmissionFileDAO extends SubmissionVersionedDAO implements PK
 					AND sf.revision '.($latestOnly ? '>=' : '=').' rrf.revision ';
 		}
 
-		if (!$submissionVersion) {
+		if (!$fileId && !$submissionVersion) {
 			$submissionDao = Application::getSubmissionDAO();
 			$submissionVersion = $submissionDao->getCurrentSubmissionVersionById($submissionId);
 		}

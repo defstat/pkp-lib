@@ -58,7 +58,6 @@ abstract class RepresentationDAO extends SubmissionVersionedDAO implements ISubm
 			$this->updateObject($representation);
 
 			$representation->setIsApproved(false);
-			$representation->setIsAvailable(0);
 
 			$representation->setIsCurrentSubmissionVersion(true);
 			$representation->setSubmissionVersion($newVersion);

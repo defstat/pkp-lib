@@ -157,6 +157,10 @@ abstract class Submission extends DataObject {
 	 * @return int
 	 */
 	function getCurrentSubmissionVersion() {
+		if (!$this->getData('currentVersion')) {
+			$this->setCurrentSubmissionVersion(1);
+		}
+
 		return $this->getData('currentVersion');
 	}
 

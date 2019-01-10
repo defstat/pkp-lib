@@ -164,7 +164,7 @@ abstract class SubmissionDAO extends DAO implements PKPPubIdPluginDAO, ISubmissi
 	function getCurrentPublishedSubmissionVersion($submissionId) {
 		$params = array((int) $submissionId);
 
-		$sql = 'SELECT submission_id, MAX(submission_version) as submission_version
+		$sql = 'SELECT submission_id, MAX(published_submission_version) as submission_version
 						FROM published_submissions
 						WHERE submission_id = ?
 						GROUP BY submission_id';
@@ -764,6 +764,7 @@ abstract class SubmissionDAO extends DAO implements PKPPubIdPluginDAO, ISubmissi
 		}
 
 		$submission->setCurrentSubmissionVersion($newVersion);
+		$submission->setSubmissionVersion($newVersion);
 		$this->updateObject($submission);
 	}
 
