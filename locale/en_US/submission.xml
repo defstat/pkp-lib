@@ -646,4 +646,10 @@
 	<message key="submission.currentCoverImage">Current Image</message>
 	<message key="catalog.browseTitles">{$numTitles} Titles</message>
 	<message key="catalog.noTitlesSection">No titles have been published yet for this section.</message>
+	<!-- Versioning -->
+	<message key="submission.production.version">Version {$submissionVersion}</message>
+	<message key="submission.production.newVersion">New Version</message>
+	<message key="submission.production.editMetadata">Metadata of this Version</message>
+	<message key="submission.production.editMetadata.info">This is the metadata of version {$version}.</message>
+	<message key="submission.production.editMetadata.previous">Previous versions can be seen at the corresponding tab at the production stage.</message>
 </locale>
