@@ -36,7 +36,7 @@ import('lib.pkp.classes.plugins.PKPPubIdPluginDAO');
 import('lib.pkp.classes.submission.ISubmissionVersionedDAO');
 import('lib.pkp.classes.submission.SubmissionVersionedDAO');
 
-abstract class PKPSubmissionFileDAO extends SubmissionVersionedDAO implements PKPPubIdPluginDAO, ISubmissionVersionedDAO {
+class SubmissionFileDAO extends SubmissionVersionedDAO implements PKPPubIdPluginDAO, ISubmissionVersionedDAO {
 	/**
 	 * @var array a private list of delegates that provide operations for
 	 *  different SubmissionFile implementations.

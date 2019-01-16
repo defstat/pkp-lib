@@ -916,8 +916,6 @@ abstract class SubmissionDAO extends DAO implements PKPPubIdPluginDAO, ISubmissi
 		return $sortDir;
 	}
 
-}
-
 	#region ISubmissionVersionedDAO Members
 
 	/**
