@@ -50,7 +50,7 @@
 		<field name="prev_ver_id" type="I8" />
 		<field name="is_current_submission_version" type="I1">
 			<NOTNULL />
-			<DEFAULT VALUE="0" />
+			<DEFAULT VALUE="1" />
 		</field>
 		<descr>Author metadata for submissions.</descr>
 		<index name="authors_submission_id">

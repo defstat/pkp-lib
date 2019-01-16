@@ -85,16 +85,22 @@ class SubmissionFileDAO extends SubmissionVersionedDAO implements PKPPubIdPlugin
 			$sql .= 'INNER JOIN submission_file_settings fs ON f.file_id = fs.file_id
 				WHERE	fs.setting_name = ? AND fs.setting_value = ?';
 		}
+
 		if ($submissionId) {
 			$params[] = (int) $submissionId;
-			$submissionVersion = $this->addSubmissionVersionParameter($params, $submissionId, $submissionVersion);
-			$sql .= ' AND f.submission_id = ?' .
-				$this->createWhereClauseForSubmissionVersion($submissionVersion, 'f');
+			$sql .= ' AND f.submission_id = ?';
 		}
+
 		if ($contextId) {
 			$params[] = (int) $contextId;
 			$sql .= ' AND s.context_id = ?';
 		}
+
+		if ($submissionVersion) {
+			$params[] = (int) $submissionVersion;
+			$sql .= ($submissionVersion ? ' AND f.submission_version = ? ' : ' AND f.is_current_submission_version = 1');
+		}
+
 		$sql .= ' ORDER BY f.file_id';
 		$result = $this->retrieve($sql, $params);
 

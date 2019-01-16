@@ -154,7 +154,7 @@ abstract class PKPWorkflowTabHandler extends Handler {
 				$templateMgr->assign('currentSubmissionVersion', $currentSubmissionVersion);
 
 				$publishedSubmissionDao = Application::getPublishedSubmissionDAO(); /** @var $publishedSubmissionDao PublishedArticleDAO */
-				$publishedArticle = $publishedSubmissionDao->getByArticleId($submission->getId(), $submission->getContextId(), false, $currentSubmissionVersion);
+				$publishedArticle = $publishedSubmissionDao->getBySubmissionId($submission->getId(), $submission->getContextId(), false, $currentSubmissionVersion);
 
 				if ($publishedArticle){
 

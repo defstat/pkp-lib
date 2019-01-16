@@ -27,10 +27,9 @@ abstract class PKPAuthorDAO extends SubmissionVersionedDAO implements ISubmissio
 	 * @param $version int
 	 * @return Author
 	 */
-	function getById($authorId, $submissionId = null, $submissionVersion = null) {
+	function getById($authorId, $submissionId = null) {
 		$params = array((int) $authorId);
 		if ($submissionId !== null) $params[] = (int) $submissionId;
-		$submissionVersion = $this->addSubmissionVersionParameter($params, $submissionId, $submissionVersion);
 
 		$result = $this->retrieve(
 			'SELECT DISTINCT a.*, ug.show_title, s.locale
@@ -39,8 +38,7 @@ abstract class PKPAuthorDAO extends SubmissionVersionedDAO implements ISubmissio
 				JOIN submissions s ON (s.submission_id = a.submission_id)
 				LEFT JOIN author_settings au ON (au.author_id = a.author_id)
 			WHERE	a.author_id = ?'
-				. ($submissionId !== null?' AND a.submission_id = ?':'')
-				. $this->createWhereClauseForSubmissionVersion($submissionVersion, 'a'),
+				. ($submissionId !== null?' AND a.submission_id = ?':''),
 			$params
 		);
 
@@ -65,7 +63,10 @@ abstract class PKPAuthorDAO extends SubmissionVersionedDAO implements ISubmissio
 		$authors = array();
 		$params = array((int) $submissionId);
 		if ($useIncludeInBrowse) $params[] = 1;
-		$submissionVersion = $this->addSubmissionVersionParameter($params, $submissionId, $submissionVersion);
+
+		if ($submissionVersion) {
+			$params[] = (int) $submissionVersion;
+    }
 
 		$result = $this->retrieve(
 			'SELECT	DISTINCT a.*, ug.show_title, s.locale
@@ -75,7 +76,7 @@ abstract class PKPAuthorDAO extends SubmissionVersionedDAO implements ISubmissio
 				LEFT JOIN author_settings au ON (au.author_id = a.author_id)
 			WHERE	a.submission_id = ? ' .
 			($useIncludeInBrowse ? ' AND a.include_in_browse = ?' : '')
-			. $this->createWhereClauseForSubmissionVersion($submissionVersion, 'a')
+			. ($submissionVersion ? ' AND a.submission_version = ? ' : ' AND a.is_current_submission_version = 1')
 			. ' ORDER BY seq',
 			$params
 		);
@@ -102,11 +103,14 @@ abstract class PKPAuthorDAO extends SubmissionVersionedDAO implements ISubmissio
 	 */
 	function getAuthorCountBySubmissionId($submissionId, $submissionVersion = null) {
 		$params = array((int) $submissionId);
-		$submissionVersion = $this->addSubmissionVersionParameter($params, $submissionId, $submissionVersion);
+
+		if ($submissionVersion) {
+			$params[] = (int) $submissionVersion;
+    }
 
 		$result = $this->retrieve(
 			'SELECT COUNT(*) FROM authors WHERE submission_id = ?'
-			. $this->createWhereClauseForSubmissionVersion($submissionVersion),
+			. ($submissionVersion ? ' AND submission_version = ? ' : ' AND is_current_submission_version = 1'),
 			$params
 		);
 
@@ -126,7 +130,6 @@ abstract class PKPAuthorDAO extends SubmissionVersionedDAO implements ISubmissio
 			$author,
 			array(
 				'author_id' => $author->getId(),
-				'submission_version' => $author->getSubmissionVersion(),
 			)
 		);
 	}
@@ -280,15 +283,13 @@ abstract class PKPAuthorDAO extends SubmissionVersionedDAO implements ISubmissio
 	 * @param $authorId int Author ID
 	 * @param $submissionId int Optional submission ID.
 	 */
-	function deleteById($authorId, $submissionId = null, $submissionVersion = null) {
+	function deleteById($authorId, $submissionId = null) {
 		$params = array((int) $authorId);
 		if ($submissionId) $params[] = (int) $submissionId;
-		$submissionVersion = $this->addSubmissionVersionParameter($params, $submissionId, $submissionVersion);
 
 		$this->update(
 			'DELETE FROM authors WHERE author_id = ?' .
-			($submissionId?' AND submission_id = ?':'') .
-			$this->createWhereClauseForSubmissionVersion($submissionVersion),
+			($submissionId?' AND submission_id = ?':''),
 			$params
 		);
 
@@ -302,11 +303,14 @@ abstract class PKPAuthorDAO extends SubmissionVersionedDAO implements ISubmissio
 	 */
 	function resequenceAuthors($submissionId, $submissionVersion = null) {
 		$params = array((int) $submissionId);
-		$submissionVersion = $this->addSubmissionVersionParameter($params, $submissionId, $submissionVersion);
+
+		if ($submissionVersion) {
+			$params[] = (int) $submissionVersion;
+    }
 
 		$result = $this->retrieve(
 			'SELECT author_id FROM authors WHERE submission_id = ?'
-			. $this->createWhereClauseForSubmissionVersion($submissionVersion)
+			. ($submissionVersion ? ' AND submission_version = ? ' : ' AND is_current_submission_version = 1')
 			.' ORDER BY seq',
 			$params
 		);
@@ -333,7 +337,10 @@ abstract class PKPAuthorDAO extends SubmissionVersionedDAO implements ISubmissio
 	 */
 	function getPrimaryContact($submissionId, $submissionVersion = null) {
 		$params = array((int) $submissionId);
-		$submissionVersion = $this->addSubmissionVersionParameter($params, $submissionId, $submissionVersion);
+
+		if ($submissionVersion) {
+			$params[] = (int) $submissionVersion;
+    }
 
 		$result = $this->retrieve(
 			'SELECT a.*, ug.show_title, s.locale
@@ -341,7 +348,7 @@ abstract class PKPAuthorDAO extends SubmissionVersionedDAO implements ISubmissio
 				JOIN user_groups ug ON (a.user_group_id=ug.user_group_id)
 				JOIN submissions s ON (s.submission_id = a.submission_id)
 			WHERE a.submission_id = ?'
-			. $this->createWhereClauseForSubmissionVersion($submissionVersion, 'a')
+			. ($submissionVersion ? ' AND a.submission_version = ? ' : ' AND a.is_current_submission_version = 1')
 			. ' AND a.primary_contact = 1',
 			$params
 		);
@@ -361,20 +368,22 @@ abstract class PKPAuthorDAO extends SubmissionVersionedDAO implements ISubmissio
 	 */
 	function resetPrimaryContact($authorId, $submissionId, $submissionVersion = null) {
 		$params = array((int) $submissionId);
-		$submissionVersion = $this->addSubmissionVersionParameter($params, $submissionId, $submissionVersion);
+		if ($submissionVersion) {
+			$params[] = (int) $submissionVersion;
+    }
 
 		$this->update(
-			'UPDATE authors SET primary_contact = 0 WHERE primary_contact = 1 AND submission_id = ?'
-			. $this->createWhereClauseForSubmissionVersion($submissionVersion),
+			'UPDATE authors SET primary_contact = 0
+			WHERE primary_contact = 1
+			AND submission_id = ?'
+			. ($submissionVersion ? ' AND submission_version = ? ' : ' AND is_current_submission_version = 1'),
 			$params
 		);
 
 		$params = array((int) $authorId, (int) $submissionId);
-		$submissionVersion = $this->addSubmissionVersionParameter($params, $submissionId, $submissionVersion);
 
 		$this->update(
-			'UPDATE authors SET primary_contact = 1 WHERE author_id = ? AND submission_id = ?'
-			. $this->createWhereClauseForSubmissionVersion($submissionVersion),
+			'UPDATE authors SET primary_contact = 1 WHERE author_id = ? AND submission_id = ?',
 			$params
 		);
 	}

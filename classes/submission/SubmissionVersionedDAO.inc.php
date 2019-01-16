@@ -61,51 +61,6 @@ class SubmissionVersionedDAO extends DAO {
 		return $submissionVersion;
 	}
 
-	function retrieveVersion(&$entitiesCollection, $submissionId = null, $version = null) {
-		$assocType = $this->getVersioningAssocType();
-
-		$versionedEntities = array();
-
-		$entitiesArray = $entitiesCollection;
-		if (!is_array($entitiesCollection)) {
-			$entitiesArray = $entitiesCollection->toAssociativeArray();
-		}
-
-		if ($submissionId && !$version)
-			$version = $this->getCurrentSubmissionVersion($submissionId);
-
-		foreach($entitiesArray as $entity) {
-			if (!$submissionId) {
-				$submissionId = $entity->getSubmissionId();
-				$version = ($version ? $version : $this->getCurrentSubmissionVersion($submissionId));
-
-				if ($entity->getSubmissionVersion() > $version) {
-					array_push($versionedEntities, $entity);
-				}
-			}
-
-			if ($entity->getSubmissionVersion() == $version) {
-				array_push($versionedEntities, $entity);
-			}
-		}
-
-		return $versionedEntities;
-	}
-
-	function addSubmissionVersionParameter(&$params, $submissionId, $submissionVersion) {
-		if ($submissionId && !$submissionVersion) {
-			$submissionVersion = $this->getCurrentSubmissionVersion($submissionId);
-		}
-
-		if ($submissionVersion) $params[] = (int) $submissionVersion;
-
-		return $submissionVersion;
-	}
-
-	function createWhereClauseForSubmissionVersion($submissionVersion, $versionClauseNamePrefix = null) {
-		return ($submissionVersion ? ' AND ' . ($versionClauseNamePrefix ? $versionClauseNamePrefix . '.' : '') . 'submission_version = ? ' : ' ');
-	}
-
 	function provideSubmissionVersionsForNewVersion($submissionId) {
 		$oldVersion = $this->getCurrentSubmissionVersion($submissionId);
 		$newVersion = $oldVersion + 1;
@@ -117,29 +72,5 @@ class SubmissionVersionedDAO extends DAO {
 		if (!$submission) return null;
 
 		return $this->getBySubmissionId($submission->getId(), null, $submission->getSubmissionVersion());
-	}
-
-	////////////////////////////////////////////////////-------------------------///////////////////////////////////////////////
-	function getCurrentlyPublishedEntity($submissionId) {
-		$masterTableName = $this->getMasterTableName();
-		$params = array(
-			(int) $submissionId
-		);
-
-		$result = $this->retrieve(
-				'SELECT	*
-				FROM ' . $masterTableName . '
-				WHERE	is_currently_published = 1
-				AND submission_id = ?',
-				$params
-		);
-
-		$returner = null;
-		if ($result->RecordCount() != 0) {
-			$returner = $this->_fromRow($result->GetRowAssoc(false));
-		}
-
-		$result->Close();
-		return $returner;
 	}
 }
