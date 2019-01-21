@@ -55,6 +55,15 @@ class PKPSubmissionMetadataViewForm extends Form {
 
 		$this->_formParams = $formParams;
 
+		if ($submission->getCurrentSubmissionVersion() != $submission->getSubmissionVersion()) {
+			if (!isset($this->_formParams)) {
+				$this->_formParams = array();
+			}
+
+			$this->_formParams["readOnly"] = true;
+			$this->_formParams["hideSubmit"] = true;
+		}
+
 		$this->_metadataFormImplem = new SubmissionMetadataFormImplementation($this);
 
 		$this->setDefaultFormLocale($submission->getLocale());
