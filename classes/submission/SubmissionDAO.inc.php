@@ -542,7 +542,7 @@ abstract class SubmissionDAO extends DAO implements PKPPubIdPluginDAO, ISubmissi
 				LEFT JOIN stage_assignments asa ON (asa.submission_id = s.submission_id)
 				LEFT JOIN user_groups aug ON (asa.user_group_id = aug.user_group_id AND aug.role_id = ?)
 				' . $this->_getFetchJoins() . '
-			WHERE	s.submission_id = ?
+			WHERE ps.is_current_submission_version = 1 AND	s.submission_id = ?
 				' . $this->getCompletionConditions(false) . ' AND
 				AND aug.user_group_id IS NULL
 				AND s.date_submitted IS NOT NULL
@@ -576,7 +576,7 @@ abstract class SubmissionDAO extends DAO implements PKPPubIdPluginDAO, ISubmissi
 			FROM	submissions s
 				LEFT JOIN published_submissions ps ON (s.submission_id = ps.submission_id)
 				' . $this->getFetchJoins() . '
-			WHERE	s.context_id = ?
+			WHERE ps.is_current_submission_version = 1 AND 	s.context_id = ?
 			ORDER BY s.submission_id',
 			$params
 		);
@@ -603,7 +603,7 @@ abstract class SubmissionDAO extends DAO implements PKPPubIdPluginDAO, ISubmissi
 			FROM	submissions s
 				LEFT JOIN published_submissions ps ON (s.submission_id = ps.submission_id)
 				' . $this->getFetchJoins() . '
-			WHERE	s.submission_id IN (SELECT asa.submission_id FROM stage_assignments asa, user_groups aug WHERE asa.user_group_id = aug.user_group_id AND aug.role_id = ? AND asa.user_id = ?)' .
+			WHERE ps.is_current_submission_version = 1 AND	s.submission_id IN (SELECT asa.submission_id FROM stage_assignments asa, user_groups aug WHERE asa.user_group_id = aug.user_group_id AND aug.role_id = ? AND asa.user_id = ?)' .
 				($contextId?' AND s.context_id = ?':'') .
 			' ORDER BY s.submission_id',
 			$params
