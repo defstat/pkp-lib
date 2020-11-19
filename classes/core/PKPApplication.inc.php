@@ -242,37 +242,16 @@ abstract class PKPApplication implements iPKPApplicationInfoProvider {
 
 			(new EventServiceProvider($laravelApp))->register();
 			(new BusServiceProvider($laravelApp))->register();
+			//(new ScheduleServiceProvider($laravelApp))->register();
+			
 			
 			$laravelApp->instance('Illuminate\Contracts\Events\Dispatcher', new LaravelDispacher($laravelApp));
 			// $laravelApp->instance('Illuminate\Contracts\Bus\Dispatcher', new TestBusDispatcher($laravelApp));
-			//$laravelApp->instance('Illuminate\Contracts\Container\Container', $laravelApp);
+			
 
-			// $laravelApp->bind('exception.handler', function () {
-			// 	return new class implements LaravelExceptionHandler
-			// 	{
-			// 		public function shouldReport(Throwable $e)
-			// 		{
-			// 			var_dump($e->getMessage());
-			// 			return true;
-			// 		}
-			
-			// 		public function report(Throwable $e)
-			// 		{
-			// 			var_dump($e->getMessage());
-			// 		}
-			
-			// 		public function render($request, Throwable $e)
-			// 		{
-			// 			var_dump($e->getMessage());
-			// 			return null;
-			// 		}
-			
-			// 		public function renderForConsole($output, Throwable $e)
-			// 		{
-			// 			var_dump($e->getMessage());
-			// 		}
-			// 	};
-			// });
+			$laravelApp->bind('exception.handler', function () {
+				return new PKPLaravelExceptionHandler();
+			});
 
 			// $laravelApp->singleton(
 			// 	Illuminate\Contracts\Cache\Factory::class,
@@ -334,7 +313,7 @@ abstract class PKPApplication implements iPKPApplicationInfoProvider {
 			$laravelApp['config']['cache.default'] = 'file';
 			$laravelApp['config']['cache.stores.file'] = [
 				'driver' => 'file',
-				'path' => BASE_SYS_DIR . '/cache'
+				'path' => BASE_SYS_DIR . '/cache/laravelcache'
 			];
 
 			$cacheManager = new LaravelCacheManager($laravelApp);
@@ -369,6 +348,8 @@ abstract class PKPApplication implements iPKPApplicationInfoProvider {
 			// $laravelApp->instance('Illuminate\Console\Scheduling\CacheEventMutex', new CacheEventMutex($cacheManager));
 			
 			Facade::setFacadeApplication($laravelApp);
+
+			$laravelApp->instance('Illuminate\Contracts\Container\Container', $laravelApp);
 
 			Registry::set('laravelCache', $cache);
 			Registry::set('queueWorker', $worker);

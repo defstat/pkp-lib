@@ -30,45 +30,45 @@ use Illuminate\Console\Scheduling\EventMutex;
 
 class PKPLaravelContainer extends Container
 {
-	public function __construct()
-    {
-        $this->registerBaseBindings();
-        $this->registerScheduleBindings();
-    }
+	// public function __construct()
+    // {
+    //     $this->registerBaseBindings();
+    //     $this->registerScheduleBindings();
+    // }
 
     public function isDownForMaintenance()
     {
         return false;
 	}
 	
-	protected function registerBaseBindings()
-    {
-        static::setInstance($this);
-        $this->instance('app', $this);
-		$this->instance(Container::class, $this);
+	// protected function registerBaseBindings()
+    // {
+    //     static::setInstance($this);
+    //     $this->instance('app', $this);
+	// 	$this->instance(Container::class, $this);
 		
-		$this->app->singleton(
-            \Illuminate\Contracts\Debug\ExceptionHandler::class,
-            PKPLaravelExceptionHandler::class
-		);
+	// 	$this->app->singleton(
+    //         \Illuminate\Contracts\Debug\ExceptionHandler::class,
+    //         PKPLaravelExceptionHandler::class
+	// 	);
 		
-		$this->app->bind('exception.handler', function () {
-			return new PKPLaravelExceptionHandler();
-		});
-	}
+	// 	$this->app->bind('exception.handler', function () {
+	// 		return new PKPLaravelExceptionHandler();
+	// 	});
+	// }
 	
-	protected function registerScheduleBindings()
-    {
-        $this->bind(
-            Factory::class,
-            function ($app) {
-                return new CacheManager($app);
-            }
-        );
+	// protected function registerScheduleBindings()
+    // {
+    //     $this->bind(
+    //         Factory::class,
+    //         function ($app) {
+    //             return new CacheManager($app);
+    //         }
+    //     );
 
-        $this->bind(EventMutex::class, CacheEventMutex::class);
-        // $this->bind(SchedulingMutex::class, CacheSchedulingMutex::class);
-    }
+    //     $this->bind(EventMutex::class, CacheEventMutex::class);
+    //     // $this->bind(SchedulingMutex::class, CacheSchedulingMutex::class);
+    // }
 }
 
 class PKPLaravelKernel implements Kernel
@@ -221,4 +221,23 @@ class PKPLaravelExceptionHandler implements \Illuminate\Contracts\Debug\Exceptio
 	{
 		var_dump($e->getMessage());
 	}
+}
+
+use Illuminate\Support\ServiceProvider;
+
+
+class ScheduleServiceProvider extends ServiceProvider
+{
+    public function boot()
+    {
+        
+    }
+
+    public function register()
+    {
+		// $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
+        //     $schedule->command('queue:restart')->hourly();
+        // 	$schedule->command('queue:work --sleep=3 --timeout=900 --queue=high,default,low')->runInBackground()->withoutOverlapping()->everyMinute();
+        // });
+    }
 }
