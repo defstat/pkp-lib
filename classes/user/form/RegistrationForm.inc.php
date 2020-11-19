@@ -17,6 +17,9 @@
  */
 
 import('lib.pkp.classes.form.Form');
+import('lib.pkp.classes.queue.queueJobs.EmailTemplateQueueJob');
+
+use Illuminate\Queue\Capsule\Manager as Queue;
 
 class RegistrationForm extends Form {
 
@@ -329,11 +332,9 @@ class RegistrationForm extends Form {
 				'activateUrl' => $request->url($contextPath, 'user', 'activateUser', array($this->getData('username'), $accessKey))
 			));
 			$mail->addRecipient($user->getEmail(), $user->getFullName());
-			if (!$mail->send()) {
-				import('classes.notification.NotificationManager');
-				$notificationMgr = new NotificationManager();
-				$notificationMgr->createTrivialNotification($user->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
-			}
+			
+			Queue::pushOn('emailQueue', new EmailTemplateQueueJob($mail, $request));
+
 			unset($mail);
 		}
 		return $userId;

@@ -15,6 +15,9 @@
  */
 
 import('lib.pkp.classes.form.Form');
+import('lib.pkp.classes.queue.queueJobs.EmailTemplateQueueJob');
+
+use Illuminate\Queue\Capsule\Manager as Queue;
 
 class ReviewerForm extends Form {
 	/** The submission associated with the review assignment **/
@@ -406,11 +409,8 @@ class ReviewerForm extends Form {
 				'reviewerUserName' => $reviewer->getUsername(),
 				'submissionReviewUrl' => $dispatcher->url($request, ROUTE_PAGE, null, 'reviewer', 'submission', null, $reviewUrlArgs)
 			));
-			if (!$mail->send($request)) {
-				import('classes.notification.NotificationManager');
-				$notificationMgr = new NotificationManager();
-				$notificationMgr->createTrivialNotification($request->getUser()->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
-			}
+
+			Queue::pushOn('emailQueue', new EmailTemplateQueueJob($mail, $request));
 		}
 
 		// Insert a trivial notification to indicate the reviewer was added successfully.

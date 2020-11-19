@@ -14,6 +14,9 @@
  */
 
 import('lib.pkp.classes.form.Form');
+import('lib.pkp.classes.queue.queueJobs.EmailTemplateQueueJob');
+
+use Illuminate\Queue\Capsule\Manager as Queue;
 
 class ReviewReminderForm extends Form {
 	/** The review assignment associated with the reviewer **/
@@ -165,11 +168,8 @@ class ReviewReminderForm extends Form {
 			'submissionReviewUrl' => $dispatcher->url($request, ROUTE_PAGE, null, 'reviewer', 'submission', null, $reviewUrlArgs),
 			'editorialContactSignature' => $user->getContactSignature(),
 		));
-		if (!$email->send($request)) {
-			import('classes.notification.NotificationManager');
-			$notificationMgr = new NotificationManager();
-			$notificationMgr->createTrivialNotification($request->getUser()->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
-		}
+
+		Queue::pushOn('emailQueue', new EmailTemplateQueueJob($email, $request));
 
 		// update the ReviewAssignment with the reminded and modified dates
 		$reviewAssignment->setDateReminded(Core::getCurrentDate());

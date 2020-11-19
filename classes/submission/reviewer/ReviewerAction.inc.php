@@ -16,6 +16,9 @@
 
 // Access decision actions constants.
 import('classes.workflow.EditorDecisionActionsManager');
+import('lib.pkp.classes.queue.queueJobs.EmailTemplateQueueJob');
+
+use Illuminate\Queue\Capsule\Manager as Queue;
 
 class ReviewerAction {
 
@@ -54,11 +57,8 @@ class ReviewerAction {
 			import('lib.pkp.classes.log.SubmissionEmailLogEntry'); // Import email event constants
 			$email->setEventType($decline?SUBMISSION_EMAIL_REVIEW_DECLINE:SUBMISSION_EMAIL_REVIEW_CONFIRM);
 			if ($emailText) $email->setBody($emailText);
-			if (!$email->send($request)) {
-				import('classes.notification.NotificationManager');
-				$notificationMgr = new NotificationManager();
-				$notificationMgr->createTrivialNotification($request->getUser()->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
-			}
+			
+			Queue::pushOn('emailQueue', new EmailTemplateQueueJob($email, $request));
 
 			$reviewAssignment->setDeclined($decline);
 			$reviewAssignment->setDateConfirmed(Core::getCurrentDate());

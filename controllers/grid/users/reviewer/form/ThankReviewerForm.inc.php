@@ -14,6 +14,9 @@
  */
 
 import('lib.pkp.classes.form.Form');
+import('lib.pkp.classes.queue.queueJobs.EmailTemplateQueueJob');
+
+use Illuminate\Queue\Capsule\Manager as Queue;
 
 class ThankReviewerForm extends Form {
 	/** The review assignment associated with the reviewer **/
@@ -119,11 +122,8 @@ class ThankReviewerForm extends Form {
 				'editorialContactSignature' => $user->getContactSignature(),
 				'signatureFullName' => $user->getFullname(),
 			));
-			if (!$email->send($request)) {
-				import('classes.notification.NotificationManager');
-				$notificationMgr = new NotificationManager();
-				$notificationMgr->createTrivialNotification($request->getUser()->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
-			}
+			
+			Queue::pushOn('emailQueue', new EmailTemplateQueueJob($email, $request));
 		}
 
 		// update the ReviewAssignment with the acknowledged date

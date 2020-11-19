@@ -15,6 +15,9 @@
 
 
 import('classes.handler.Handler');
+import('lib.pkp.classes.queue.queueJobs.EmailTemplateQueueJob');
+
+use Illuminate\Queue\Capsule\Manager as Queue;
 
 class LoginHandler extends Handler {
 	/**
@@ -251,11 +254,8 @@ class LoginHandler extends Handler {
 				'siteTitle' => $site->getLocalizedTitle()
 			));
 			$mail->addRecipient($user->getEmail(), $user->getFullName());
-			if (!$mail->send()) {
-				import('classes.notification.NotificationManager');
-				$notificationMgr = new NotificationManager();
-				$notificationMgr->createTrivialNotification($user->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
-			}
+
+			Queue::pushOn('emailQueue', new EmailTemplateQueueJob($mail, $request));
 
 			$templateMgr->assign(array(
 				'pageTitle' => 'user.login.resetPassword',

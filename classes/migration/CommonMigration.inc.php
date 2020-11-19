@@ -17,11 +17,11 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 class CommonMigration extends Migration {
-        /**
-         * Run the migrations.
-         * @return void
-         */
-        public function up() {
+	/**
+	 * Run the migrations.
+	 * @return void
+	 */
+	public function up() {
 		// Describes the installation and upgrade version history for the application and all installed plugins.
 		Capsule::schema()->create('versions', function (Blueprint $table) {
 			$table->integer('major')->default(0)->comment('Major component of version number, e.g. the 2 in OJS 2.3.8-0');
@@ -239,6 +239,18 @@ class CommonMigration extends Migration {
 			$table->unique(['plugin_name', 'context_id', 'setting_name'], 'plugin_settings_pkey');
 		});
 
+		Capsule::schema()->create('jobs', function (Blueprint $table) {
+			$table->bigIncrements('id');
+			$table->string('queue');
+			$table->longText('payload');
+			$table->unsignedTinyInteger('attempts');
+			$table->unsignedInteger('reserved_at')->nullable();
+			$table->unsignedInteger('available_at');
+			$table->unsignedInteger('created_at');
+
+			$table->index(['queue', 'reserved_at']);
+		});
+
 	}
 
 	/**
@@ -246,6 +258,7 @@ class CommonMigration extends Migration {
 	 * @return void
 	 */
 	public function down() {
+		Capsule::schema()->dropIfExists('jobs');
 		Capsule::schema()->drop('plugin_settings');
 		Capsule::schema()->drop('oai_resumption_tokens');
 		Capsule::schema()->drop('email_templates_settings');

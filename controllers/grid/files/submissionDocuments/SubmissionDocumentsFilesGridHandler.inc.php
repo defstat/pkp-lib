@@ -126,23 +126,23 @@ class SubmissionDocumentsFilesGridHandler extends LibraryFileGridHandler {
 	/**
 	 * Returns a specific instance of the new form for this grid.
 	 * @param $context Context
-	 * @return NewLibraryFileForm
+	 * @return NewLibrarySubmissionFileForm
 	 */
 	function _getNewFileForm($context) {
 		$submission = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION);
-		import('lib.pkp.controllers.grid.files.submissionDocuments.form.NewLibraryFileForm');
-		return new NewLibraryFileForm($context->getId(), $submission->getId());
+		import('lib.pkp.controllers.grid.files.submissionDocuments.form.NewLibrarySubmissionFileForm');
+		return new NewLibrarySubmissionFileForm($context->getId(), $submission->getId());
 	}
 
 	/**
 	 * Returns a specific instance of the edit form for this grid.
 	 * @param $context Press
 	 * @param $fileId int
-	 * @return EditLibraryFileForm
+	 * @return EditLibrarySubmissionFileForm
 	 */
 	function _getEditFileForm($context, $fileId) {
 		$submission = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION);
-		import('lib.pkp.controllers.grid.files.submissionDocuments.form.EditLibraryFileForm');
-		return new EditLibraryFileForm($context->getId(), $fileId, $submission->getId());
+		import('lib.pkp.controllers.grid.files.submissionDocuments.form.EditLibrarySubmissionFileForm');
+		return new EditLibrarySubmissionFileForm($context->getId(), $fileId, $submission->getId());
 	}
 }

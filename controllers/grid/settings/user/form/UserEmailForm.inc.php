@@ -14,6 +14,9 @@
  */
 
 import('lib.pkp.classes.form.Form');
+import('lib.pkp.classes.queue.queueJobs.EmailTemplateQueueJob');
+
+use Illuminate\Queue\Capsule\Manager as Queue;
 
 class UserEmailForm extends Form {
 
@@ -84,11 +87,7 @@ class UserEmailForm extends Form {
 
 		parent::execute(...$functionArgs);
 
-		if (!$email->send()) {
-			import('classes.notification.NotificationManager');
-			$notificationMgr = new NotificationManager();
-			$notificationMgr->createTrivialNotification($request->getUser()->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
-		}
+		Queue::pushOn('emailQueue', new EmailTemplateQueueJob($email, $request));
 	}
 }
 

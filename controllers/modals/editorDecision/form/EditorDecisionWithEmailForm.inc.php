@@ -14,6 +14,9 @@
  */
 
 import('lib.pkp.classes.controllers.modals.editorDecision.form.EditorDecisionForm');
+import('lib.pkp.classes.queue.queueJobs.EmailTemplateQueueJob');
+
+use Illuminate\Queue\Capsule\Manager as Queue;
 
 class EditorDecisionWithEmailForm extends EditorDecisionForm {
 
@@ -295,11 +298,8 @@ class EditorDecisionWithEmailForm extends EditorDecisionForm {
 				'authorName' => $submission->getAuthorString(),
 				'editorialContactSignature' => $user->getContactSignature(),
 			));
-			if (!$email->send($request)) {
-				import('classes.notification.NotificationManager');
-				$notificationMgr = new NotificationManager();
-				$notificationMgr->createTrivialNotification($request->getUser()->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
-			}
+			
+			Queue::pushOn('emailQueue', new EmailTemplateQueueJob($email, $request));
 		}
 	}
 

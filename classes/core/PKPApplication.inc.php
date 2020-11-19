@@ -1,4 +1,5 @@
 <?php
+use Illuminate\Bus\BusServiceProvider;
 
 /**
  * @file classes/core/PKPApplication.inc.php
@@ -69,6 +70,31 @@ define('WORKFLOW_TYPE_EDITORIAL', 'editorial');
 define('WORKFLOW_TYPE_AUTHOR', 'author');
 
 use Illuminate\Database\Capsule\Manager as Capsule;
+
+use Illuminate\Queue\Worker;
+use Illuminate\Queue\WorkerOptions;
+use Illuminate\Events\Dispatcher as LaravelDispacher;
+use Illuminate\Events\EventServiceProvider;
+use Illuminate\Queue\Capsule\Manager as Queue;
+use Illuminate\Contracts\Debug\ExceptionHandler as LaravelExceptionHandler;
+use Illuminate\Queue\Connectors\DatabaseConnector;
+use Illuminate\Console\Application as LaravelApplication;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Cache\CacheManager as LaravelCacheManager;
+
+use Illuminate\Queue\Console\WorkCommand;
+use Illuminate\Queue\Console\ListenCommand;
+
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
+
+use Illuminate\Console\Scheduling\ScheduleRunCommand;
+use Illuminate\Contracts\Cache\Factory;
+use Illuminate\Console\Scheduling\CacheEventMutex;
+
+use Illuminate\Cache\Console\ClearCommand;
+
+use Illuminate\Support\Facades\Facade;
 
 interface iPKPApplicationInfoProvider {
 	/**
@@ -158,6 +184,8 @@ abstract class PKPApplication implements iPKPApplicationInfoProvider {
 
 		import('classes.i18n.AppLocale');
 
+		import('lib.pkp.classes.queue.PKPLaravelContainer');
+
 		PKPString::init();
 
 		$microTime = Core::microtime();
@@ -206,6 +234,146 @@ abstract class PKPApplication implements iPKPApplicationInfoProvider {
 				'collation' => 'utf8_general_ci',
 			]);
 			$capsule->setAsGlobal();
+
+			/**
+			 * SetUp Queue Support
+			 */
+			$laravelApp = new PKPLaravelContainer();
+
+			(new EventServiceProvider($laravelApp))->register();
+			(new BusServiceProvider($laravelApp))->register();
+			
+			$laravelApp->instance('Illuminate\Contracts\Events\Dispatcher', new LaravelDispacher($laravelApp));
+			// $laravelApp->instance('Illuminate\Contracts\Bus\Dispatcher', new TestBusDispatcher($laravelApp));
+			//$laravelApp->instance('Illuminate\Contracts\Container\Container', $laravelApp);
+
+			// $laravelApp->bind('exception.handler', function () {
+			// 	return new class implements LaravelExceptionHandler
+			// 	{
+			// 		public function shouldReport(Throwable $e)
+			// 		{
+			// 			var_dump($e->getMessage());
+			// 			return true;
+			// 		}
+			
+			// 		public function report(Throwable $e)
+			// 		{
+			// 			var_dump($e->getMessage());
+			// 		}
+			
+			// 		public function render($request, Throwable $e)
+			// 		{
+			// 			var_dump($e->getMessage());
+			// 			return null;
+			// 		}
+			
+			// 		public function renderForConsole($output, Throwable $e)
+			// 		{
+			// 			var_dump($e->getMessage());
+			// 		}
+			// 	};
+			// });
+
+			// $laravelApp->singleton(
+			// 	Illuminate\Contracts\Cache\Factory::class,
+			// 	function ($laravelApp) {
+			// 		return new LaravelCacheManager($laravelApp);
+			// 	}
+			// );
+
+			$queue = new Queue($laravelApp);
+			$queue->addConnection([
+				'driver'    => 'database',
+				'table'     => 'jobs', // Required for database connection
+				'connection' => 'default',
+				'host'      => 'localhost',
+				'queue' => 'emailQueue',
+			], 'databaseQueueConnection');
+
+			$queue->addConnection([
+				'driver'    => 'sync',
+			]);
+
+			$manager = $queue->getQueueManager();
+
+			$connection = Capsule::schema()->getConnection();
+			$resolver = new \Illuminate\Database\ConnectionResolver(['default' => $connection]);
+			$manager->addConnector('database', function () use ($resolver) {
+				return new DatabaseConnector($resolver);
+			});
+
+			$manager->before(function (JobProcessing $event) {
+				$event->connectionName;
+				$event->job;
+				$event->job->payload();
+			});
+
+			$manager->after(function (JobProcessed $event) {
+				$event->connectionName;
+				$event->job;
+				$event->job->payload();
+			});
+
+			$manager->looping(function($input) {
+				$i = 0;
+			});
+
+			$queue->setAsGlobal();
+
+			$events = $laravelApp['events'];
+			$handler = $laravelApp['exception.handler'];
+			$isDownForMaintanance = function() {
+				return false;
+			};
+
+			$worker = new Worker($manager, $events, $handler, $isDownForMaintanance);
+
+			// To use the file cache driver we need an instance of Illuminate's Filesystem, also stored in the container
+			$laravelApp['files'] = new Filesystem;
+			// $laravelApp['config']['cache.default'] = BASE_SYS_DIR . '/cache/laravelCache/file';
+			$laravelApp['config']['cache.default'] = 'file';
+			$laravelApp['config']['cache.stores.file'] = [
+				'driver' => 'file',
+				'path' => BASE_SYS_DIR . '/cache'
+			];
+
+			$cacheManager = new LaravelCacheManager($laravelApp);
+
+			// $laravelApp->when(Illuminate\Console\Scheduling\CacheEventMutex::class)
+			// 	->needs(Illuminate\Contracts\Cache\Factory::class)
+			// 	->give(function ($cacheManager) {
+			// 		return $cacheManager;
+			// 	}
+			// );
+
+			// Get the default cache driver
+			$cache = $cacheManager->store();
+
+			$laravelApp->instance('Illuminate\Queue\Console\WorkCommand', new WorkCommand($worker, $cache));
+			$laravelApp->instance('Illuminate\Console\Scheduling\ScheduleRunCommand', new ScheduleRunCommand());
+
+			$laravelApp->instance('Illuminate\Cache\Console\ClearCommand', new ClearCommand($cacheManager, $laravelApp['files']));
+
+			$artisan = new LaravelApplication($laravelApp, $events, 'Version 1');
+			$artisan->setName('My Console App Name');
+			
+			$artisan->resolve(WorkCommand::class);
+			$artisan->resolve(ScheduleRunCommand::class);
+			$artisan->resolve(ClearCommand::class);
+
+			$laravelApp->instance('Illuminate\Contracts\Console\Kernel', new PKPLaravelKernel($laravelApp, $artisan, $events));
+			//$laravelApp->instance('Illuminate\Contracts\Cache\Factory', new LaravelCacheManager($laravelApp));
+
+			
+
+			// $laravelApp->instance('Illuminate\Console\Scheduling\CacheEventMutex', new CacheEventMutex($cacheManager));
+			
+			Facade::setFacadeApplication($laravelApp);
+
+			Registry::set('laravelCache', $cache);
+			Registry::set('queueWorker', $worker);
+			Registry::set('queue', $queue);
+			Registry::set('laravelContainer', $laravelApp);
 		}
 
 		// Register custom autoloader functions for namespaces
@@ -219,6 +387,18 @@ abstract class PKPApplication implements iPKPApplicationInfoProvider {
 			$rootPath = BASE_SYS_DIR . "/classes";
 			customAutoload($rootPath, $prefix, $class);
 		});
+		
+		$loader = new Nette\Loaders\RobotLoader;
+
+		// directories to be indexed by RobotLoader (including subdirectories)
+		$loader->addDirectory(BASE_SYS_DIR . '/classes');
+		$loader->addDirectory(BASE_SYS_DIR . '/lib/pkp/classes');
+		$loader->addDirectory(BASE_SYS_DIR . '/controllers');
+		$loader->addDirectory(BASE_SYS_DIR . '/lib/pkp/controllers');
+
+		// use 'temp' directory for cache
+		$loader->setTempDirectory(BASE_SYS_DIR . '/cache/t_cache');
+		$loader->register(); // Run the RobotLoader
 	}
 
 	/**

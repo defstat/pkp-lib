@@ -348,3 +348,25 @@ function customAutoload($rootPath, $prefix, $class) {
 	}
 }
 
+/**
+ * Helper function to define custom autoloader 
+ * @param string $rootPath
+ * @param string $prefix
+ * @param string $class
+ * 
+ * @return void
+ */
+function customFolderAutoload($rootPath, $class) {
+	$parts = explode('\\', $class);
+
+	if (count($parts) != 1) {
+		return;
+	}
+
+	$filePath = "{$rootPath}/{$class}.inc.php";
+
+	if (is_file($filePath)) {
+		require_once($filePath);
+	}
+}
+

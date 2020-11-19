@@ -186,7 +186,7 @@ class MailTemplate extends Mail {
 	 * Send the email.
 	 * @return boolean false if there was a problem sending the email
 	 */
-	function send() {
+	function send($request = null) {
 		if (isset($this->context)) {
 			$signature = $this->context->getData('emailSignature');
 			if (strstr($this->getBody(), '{$templateSignature}') === false) {
@@ -199,7 +199,10 @@ class MailTemplate extends Mail {
 			if (!empty($envelopeSender) && Config::getVar('email', 'allow_envelope_sender')) $this->setEnvelopeSender($envelopeSender);
 		}
 
-		$request = Application::get()->getRequest();
+		if (!$request) {
+			$request = Application::get()->getRequest();
+		}
+		
 		$user = defined('SESSION_DISABLE_INIT')?null:$request->getUser();
 
 		if ($user && $this->bccSender) {

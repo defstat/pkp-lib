@@ -19,6 +19,9 @@
 
 import('classes.notification.Notification');
 import('lib.pkp.classes.notification.INotificationInfoProvider');
+import('lib.pkp.classes.queue.queueJobs.EmailTemplateQueueJob');
+
+use Illuminate\Queue\Capsule\Manager as Queue;
 
 abstract class PKPNotificationOperationManager implements INotificationInfoProvider {
 
@@ -402,11 +405,8 @@ abstract class PKPNotificationOperationManager implements INotificationInfoProvi
 			if (is_callable($mailConfigurator)) {
 				$mail = $mailConfigurator($mail);
 			}
-			if (!$mail->send() && $request->getUser()) {
-				import('classes.notification.NotificationManager');
-				$notificationMgr = new NotificationManager();
-				$notificationMgr->createTrivialNotification($request->getUser()->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
-			}
+
+			Queue::pushOn('emailQueue', new EmailTemplateQueueJob($mail, $request));
 		}
 	}
 }

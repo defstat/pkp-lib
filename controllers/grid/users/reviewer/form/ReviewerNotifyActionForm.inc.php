@@ -13,6 +13,9 @@
  */
 
 import('lib.pkp.classes.form.Form');
+import('lib.pkp.classes.queue.queueJobs.EmailTemplateQueueJob');
+
+use Illuminate\Queue\Capsule\Manager as Queue;
 
 abstract class ReviewerNotifyActionForm extends Form {
 	/** The review assignment to alter */
@@ -100,11 +103,8 @@ abstract class ReviewerNotifyActionForm extends Form {
 			$mail->addRecipient($reviewer->getEmail(), $reviewer->getFullName());
 			$mail->setBody($this->getData('personalMessage'));
 			$mail->assignParams();
-			if (!$mail->send($request)) {
-				import('classes.notification.NotificationManager');
-				$notificationMgr = new NotificationManager();
-				$notificationMgr->createTrivialNotification($request->getUser()->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
-			}
+
+			Queue::pushOn('emailQueue', new EmailTemplateQueueJob($mail, $request));
 		}
 		parent::execute(...$functionArgs);
 		return true;

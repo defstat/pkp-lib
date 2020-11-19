@@ -1,6 +1,6 @@
 <?php
 /**
- * @file controllers/grid/files/submissionDocuments/form/NewLibraryFileForm.inc.php
+ * @file controllers/grid/files/submissionDocuments/form/NewLibrarySubmissionFileForm.inc.php
  *
  * Copyright (c) 2014-2020 Simon Fraser University
  * Copyright (c) 2003-2020 John Willinsky
@@ -15,7 +15,7 @@
 
 import('lib.pkp.controllers.grid.files.form.LibraryFileForm');
 
-class NewLibraryFileForm extends LibraryFileForm {
+class NewLibrarySubmissionFileForm extends LibraryFileForm {
 
 	/** @var int */
 	var $submissionId;

@@ -14,6 +14,9 @@
  */
 
 import('lib.pkp.controllers.grid.settings.user.form.UserForm');
+import('lib.pkp.classes.queue.queueJobs.EmailTemplateQueueJob');
+
+use Illuminate\Queue\Capsule\Manager as Queue;
 
 class UserDetailsForm extends UserForm {
 
@@ -339,11 +342,8 @@ class UserDetailsForm extends UserForm {
 				$mail->setReplyTo($context->getData('contactEmail'), $context->getData('contactName'));
 				$mail->assignParams(array('username' => $this->getData('username'), 'password' => $password, 'userFullName' => $this->user->getFullName()));
 				$mail->addRecipient($this->user->getEmail(), $this->user->getFullName());
-				if (!$mail->send()) {
-					import('classes.notification.NotificationManager');
-					$notificationMgr = new NotificationManager();
-					$notificationMgr->createTrivialNotification($request->getUser()->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
-				}
+				
+				Queue::pushOn('emailQueue', new EmailTemplateQueueJob($mail, $request));
 			}
 		}
 

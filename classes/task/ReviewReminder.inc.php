@@ -14,6 +14,9 @@
  */
 
 import('lib.pkp.classes.scheduledTask.ScheduledTask');
+import('lib.pkp.classes.queue.queueJobs.EmailTemplateQueueJob');
+
+use Illuminate\Queue\Capsule\Manager as Queue;
 
 define('REVIEW_REMIND_AUTO', 'REVIEW_REMIND_AUTO');
 define('REVIEW_REQUEST_REMIND_AUTO', 'REVIEW_REQUEST_REMIND_AUTO');
@@ -112,7 +115,7 @@ class ReviewReminder extends ScheduledTask {
 		);
 		$email->assignParams($paramArray);
 
-		$email->send();
+		Queue::pushOn('emailQueue', new EmailTemplateQueueJob($email, $request));
 
 		$reviewAssignment->setDateReminded(Core::getCurrentDate());
 		$reviewAssignment->setReminderWasAutomatic(1);

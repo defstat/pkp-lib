@@ -17,6 +17,9 @@ import('lib.pkp.classes.form.Form');
 
 // Define review round and review stage id constants.
 import('lib.pkp.classes.submission.reviewRound.ReviewRound');
+import('lib.pkp.classes.queue.queueJobs.EmailTemplateQueueJob');
+
+use Illuminate\Queue\Capsule\Manager as Queue;
 
 class RecommendationForm extends Form {
 	/** @var Submission The submission associated with the editor recommendation */
@@ -203,11 +206,8 @@ class RecommendationForm extends Form {
 				'recommendation' => __($recommendationOptions[$recommendation]),
 			));
 			if (!$this->getData('skipEmail')) {
-				if (!$email->send($request)) {
-					import('classes.notification.NotificationManager');
-					$notificationMgr = new NotificationManager();
-					$notificationMgr->createTrivialNotification($request->getUser()->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
-				}
+				
+				Queue::pushOn('emailQueue', new EmailTemplateQueueJob($email, $request));
 			}
 
 			if (!$this->getData('skipDiscussion')) {

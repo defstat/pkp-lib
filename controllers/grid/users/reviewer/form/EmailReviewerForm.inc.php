@@ -14,6 +14,12 @@
  */
 
 import('lib.pkp.classes.form.Form');
+import('lib.pkp.classes.queue.queueJobs.EmailTemplateQueueJob');
+
+use Illuminate\Queue\Capsule\Manager as Queue;
+use Symfony\Component\Serializer\Serializer;
+
+use Illuminate\Support\Facades\Artisan;
 
 class EmailReviewerForm extends Form {
 
@@ -83,11 +89,11 @@ class EmailReviewerForm extends Form {
 		$email->setSubject($this->getData('subject'));
 		$email->setBody($this->getData('message'));
 		$email->assignParams();
-		if (!$email->send()) {
-			import('classes.notification.NotificationManager');
-			$notificationMgr = new NotificationManager();
-			$notificationMgr->createTrivialNotification($request->getUser()->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
-		}
+
+		Queue::connection('databaseQueueConnection')->pushOn('emailQueue', new EmailTemplateQueueJob($email, $request));
+		// Queue::pushOn('emailQueue', new EmailTemplateQueueJob($email, $request));
+
+		// Artisan::call('queue:work', array('connection' => 'databaseQueueConnection', '--queue' => 'emailQueue', '--once' => true), null);
 	}
 }
 
