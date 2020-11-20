@@ -69,6 +69,8 @@ define('WORKFLOW_TYPE_EDITORIAL', 'editorial');
 define('WORKFLOW_TYPE_AUTHOR', 'author');
 
 use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Queue\Capsule\Manager as Queue;
+use Illuminate\Queue\Connectors\DatabaseConnector;
 
 interface iPKPApplicationInfoProvider {
 	/**
@@ -155,6 +157,10 @@ abstract class PKPApplication implements iPKPApplicationInfoProvider {
 
 		import('lib.pkp.classes.plugins.PluginRegistry');
 		import('lib.pkp.classes.plugins.HookRegistry');
+		
+		import('lib.pkp.classes.laravelintegration.core.PKPLaravelContainer');
+		import('lib.pkp.classes.laravelintegration.core.PKPLaravelConsoleKernel');
+		import('lib.pkp.classes.laravelintegration.core.PKPLaravelExceptionHandler');
 
 		import('classes.i18n.AppLocale');
 
@@ -207,6 +213,58 @@ abstract class PKPApplication implements iPKPApplicationInfoProvider {
 			$rootPath = BASE_SYS_DIR . "/classes";
 			customAutoload($rootPath, $prefix, $class);
 		});
+
+		$loader = new Nette\Loaders\RobotLoader;
+
+		// directories to be indexed by RobotLoader (including subdirectories)
+		$loader->addDirectory(BASE_SYS_DIR . '/classes');
+		$loader->addDirectory(BASE_SYS_DIR . '/lib/pkp/classes');
+		$loader->addDirectory(BASE_SYS_DIR . '/controllers');
+		$loader->addDirectory(BASE_SYS_DIR . '/lib/pkp/controllers');
+
+		// use 'temp' directory for cache
+		$loader->setTempDirectory(BASE_SYS_DIR . '/cache/t_cache');
+		$loader->register(); // Run the RobotLoader
+		
+		$this->createLaravelInstance();
+	}
+
+	public function createLaravelInstance() {
+		$laravelApp = new PKPLaravelContainer();
+
+		$connection = Capsule::schema()->getConnection();
+		$resolver = new \Illuminate\Database\ConnectionResolver(['database' => $connection]);
+
+		$laravelApp['db'] = $resolver;
+
+		$laravelApp->singleton(
+			Illuminate\Contracts\Console\Kernel::class,
+			PKPLaravelConsoleKernel::class
+		);
+		
+		$laravelApp->singleton(
+			Illuminate\Contracts\Debug\ExceptionHandler::class,
+			PKPLaravelExceptionHandler::class
+		);
+
+		if (! $laravelApp->hasBeenBootstrapped()) {
+            $laravelApp->bootstrapWith($laravelApp->bootstrapers());
+        }
+
+		$queue = new Queue($laravelApp);
+
+		$manager = $queue->getQueueManager();
+
+		$connection = Capsule::schema()->getConnection();
+		$resolver = new \Illuminate\Database\ConnectionResolver(['database' => $connection]);
+		$manager->addConnector('database', function () use ($resolver) {
+			return new DatabaseConnector($resolver);
+		});
+
+		$queue->setAsGlobal();
+
+
+		Registry::set('laravelContainer', $laravelApp);
 	}
 
 	/**

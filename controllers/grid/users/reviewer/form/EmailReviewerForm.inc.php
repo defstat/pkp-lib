@@ -12,8 +12,12 @@
  *
  * @brief Form for sending an email to a user
  */
+use Illuminate\Queue\Capsule\Manager as Queue;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Bus;
 
 import('lib.pkp.classes.form.Form');
+import('lib.pkp.classes.queues.jobs.EmailTemplateQueueJob');
 
 class EmailReviewerForm extends Form {
 
@@ -83,11 +87,8 @@ class EmailReviewerForm extends Form {
 		$email->setSubject($this->getData('subject'));
 		$email->setBody($this->getData('message'));
 		$email->assignParams();
-		if (!$email->send()) {
-			import('classes.notification.NotificationManager');
-			$notificationMgr = new NotificationManager();
-			$notificationMgr->createTrivialNotification($request->getUser()->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
-		}
+
+		Queue::connection('database')->pushOn('emailQueue', new EmailTemplateQueueJob($email, $request));
 	}
 }
 
