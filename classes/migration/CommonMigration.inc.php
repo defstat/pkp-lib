@@ -239,6 +239,29 @@ class CommonMigration extends Migration {
 			$table->unique(['plugin_name', 'context_id', 'setting_name'], 'plugin_settings_pkey');
 		});
 
+		Capsule::schema()->create('jobs', function (Blueprint $table) {
+			$table->bigIncrements('id');
+			$table->string('queue');
+			$table->longText('payload');
+			$table->unsignedTinyInteger('attempts');
+			$table->unsignedInteger('reserved_at')->nullable();
+			$table->unsignedInteger('available_at');
+			$table->unsignedInteger('created_at');
+
+			$table->index(['queue', 'reserved_at']);
+		});
+
+		Capsule::schema()->create('job_manager', function (Blueprint $table) {
+			$table->bigInteger('job_id');
+			$table->bigInteger('status');
+			$table->longText('job_class');
+			$table->datetime('date_created');
+			$table->datetime('date_processed')->nullable();
+
+
+			$table->index(['job_id'], 'job_manager_id');
+		});
+
 	}
 
 	/**
@@ -246,6 +269,8 @@ class CommonMigration extends Migration {
 	 * @return void
 	 */
 	public function down() {
+		Capsule::schema()->dropIfExists('job_manager');
+		Capsule::schema()->dropIfExists('jobs');
 		Capsule::schema()->drop('plugin_settings');
 		Capsule::schema()->drop('oai_resumption_tokens');
 		Capsule::schema()->drop('email_templates_settings');

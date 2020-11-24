@@ -28,9 +28,19 @@ use Illuminate\Bus\Queueable;
 class EmailTemplateQueueJob implements ShouldQueue {
 
 	use InteractsWithQueue, Queueable;
-	
-	private $emailTemplate;
+
+	public $emailTemplate;
 	private $pkpRequest;
+
+	private $pkpJobId;
+
+	public function getPKPJobId() {
+		return $this->pkpJobId;
+	}
+
+	public function setPKPJobId($pkpJobId) {
+		$this->pkpJobId = $pkpJobId;
+	}
 
 	function __construct($_emailTemplate, $_request) {
 		$this->emailTemplate = $_emailTemplate;
@@ -45,9 +55,9 @@ class EmailTemplateQueueJob implements ShouldQueue {
 				$notificationMgr = new NotificationManager();
 				$notificationMgr->createTrivialNotification($this->pkpRequest->getUser()->getId(), NOTIFICATION_TYPE_ERROR, array('contents' => __('email.compose.error')));
 			}
-			
+
 		} catch (Exception $e) {
-			$this->job->fail($e);
-		} 
+			$this->job->fail();
+		}
 	}
 }

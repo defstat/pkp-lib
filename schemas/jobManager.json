@@ -1,0 +1,45 @@
+{
+	"title": "JobManager",
+	"description": "An JobManager .",
+	"required": [
+		"contextId",
+		"status",
+		"jobClass",
+		"dateCreated"
+	],
+	"properties": {
+		"status": {
+			"type": "integer",
+			"apiSummary": true
+		},
+		"jobClass": {
+			"type": "string",
+			"apiSummary": true
+		},
+		"dateCreated": {
+			"type": "string",
+			"apiSummary": true,
+			"validation": [
+				"nullable",
+				"date_format:Y-m-d"
+			]
+		},
+		"dateProcessed": {
+			"type": "string",
+			"apiSummary": true,
+			"validation": [
+				"nullable",
+				"date_format:Y-m-d H:i:s"
+			]
+		},
+		"contextId": {
+			"type": "integer",
+			"apiSummary": true
+		},
+
+		"id": {
+			"type": "integer",
+			"apiSummary": true
+		}
+	}
+}

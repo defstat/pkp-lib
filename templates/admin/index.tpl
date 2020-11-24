@@ -27,6 +27,7 @@
 			<li><a href="{url op="contexts"}">{translate key="admin.hostedContexts"}</a></li>
 			{call_hook name="Templates::Admin::Index::SiteManagement"}
 			<li><a href="{url op="settings"}">{translate key="admin.siteSettings"}</a></li>
+			<li><a href="{url op="queueWorkers"}">{translate key="admin.queueWorkers"}</a></li>
 		</ul>
 		<h2>{translate key="admin.adminFunctions"}</h2>
 		<ul>

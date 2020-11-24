@@ -29,6 +29,7 @@ switch ($op) {
 	case 'clearDataCache':
 	case 'downloadScheduledTaskLogFile':
 	case 'clearScheduledTaskLogFiles':
+	case 'queueWorkers':
 		define('HANDLER_CLASS', 'AdminHandler');
 		import('lib.pkp.pages.admin.AdminHandler');
 		break;

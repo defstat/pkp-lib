@@ -29,7 +29,10 @@ class LaravelSchedulerRun extends ScheduledTask {
 	 * @copydoc ScheduledTask::executeActions()
 	 */
 	public function executeActions() {
-		Artisan::call('schedule:run', array(), null);
+		PKPLaravelWrapper::initialiseLaravel();
+
+		// Artisan::call('schedule:run', array(), null);
+		Artisan::call('queue:work', array('connection' => 'database', '--queue' => 'emailQueue', '--once' => true), null);
 
 		return true;
 	}

@@ -29,6 +29,7 @@ define('SCHEMA_SUBMISSION', 'submission');
 define('SCHEMA_SUBMISSION_FILE', 'submissionFile');
 define('SCHEMA_USER', 'user');
 define('SCHEMA_USER_GROUP', 'userGroup');
+define('SCHEMA_JOB_MANAGER', 'jobManager');
 
 class PKPSchemaService {
 	/** @var array cache of schemas that have been loaded */

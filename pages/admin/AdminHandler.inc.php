@@ -42,6 +42,7 @@ class AdminHandler extends Handler {
 				'clearDataCache',
 				'downloadScheduledTaskLogFile',
 				'clearScheduledTaskLogFiles',
+				'queueWorkers',
 			]
 		);
 	}
@@ -140,6 +141,26 @@ class AdminHandler extends Handler {
 			'pageTitle' => __('admin.hostedContexts'),
 		]);
 		$templateMgr->display('admin/contexts.tpl');
+	}
+
+	/**
+	 * Display a list of the contexts hosted on the site.
+	 * @param $args array
+	 * @param $request PKPRequest
+	 */
+	function queueWorkers($args, $request) {
+		$this->setupTemplate($request);
+		$templateMgr = TemplateManager::getManager($request);
+		$breadcrumbs = $templateMgr->get_template_vars('breadcrumbs');
+		$breadcrumbs[] = [
+			'id' => 'contexts',
+			'name' => __('admin.hostedContexts'),
+		];
+		$templateMgr->assign([
+			'breadcrumbs' => $breadcrumbs,
+			'pageTitle' => __('admin.hostedContexts'),
+		]);
+		$templateMgr->display('admin/queueWorkers.tpl');
 	}
 
 	/**

@@ -66,7 +66,7 @@ class SubmissionMailTemplate extends MailTemplate {
 	 */
 	function send($request = null) {
 		if (parent::send()) {
-			$this->log($request);
+			//$this->log($request);
 			return true;
 		} else {
 			return false;

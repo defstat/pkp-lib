@@ -13,11 +13,14 @@
  * @brief Form for sending an email to a user
  */
 use Illuminate\Queue\Capsule\Manager as Queue;
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
 
 import('lib.pkp.classes.form.Form');
 import('lib.pkp.classes.queues.jobs.EmailTemplateQueueJob');
+import('lib.pkp.classes.laravelintegration.core.PKPLaravelWrapper');
 
 class EmailReviewerForm extends Form {
 
@@ -88,6 +91,9 @@ class EmailReviewerForm extends Form {
 		$email->setBody($this->getData('message'));
 		$email->assignParams();
 
+		PKPLaravelWrapper::initialiseLaravel();
+		// $queueWrapper = new PKPQueueJobWrapper($request->getContext(), new EmailTemplateQueueJob($email, $request), $request);
+		// $queueWrapper->queueJob('emailQueue', 'database');
 		Queue::connection('database')->pushOn('emailQueue', new EmailTemplateQueueJob($email, $request));
 	}
 }
