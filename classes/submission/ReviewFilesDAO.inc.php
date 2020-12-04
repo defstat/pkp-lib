@@ -62,7 +62,7 @@ class ReviewFilesDAO extends DAO {
 	 */
 	function check($reviewId, $submission_file_id) {
 		$result = $this->retrieve(
-			'SELECT * FROM review_files WHERE review_id = ? AND submission_file_id = ?',
+			'SELECT COUNT(*) as row_count FROM review_files WHERE review_id = ? AND submission_file_id = ?',
 			[(int) $reviewId, (int) $submission_file_id]
 		);
 		$row = $result->current();
