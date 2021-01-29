@@ -2185,3 +2185,9 @@ msgstr "Conseils d'évaluation"
 
 msgid "manager.publication.emailSetup.success"
 msgstr "Les paramètres de courriels ont été mis à jour."
+
+msgid "plugins.importexport.common.cliError"
+msgstr "ERREUR :"
+
+msgid "plugins.importexport.common.error.unknownContext"
+msgstr "Le chemin pour la revue, \"{$contextPath}\", n'existe pas."

@@ -2051,3 +2051,9 @@ msgstr "Licença"
 
 msgid "stats.countWithYearlyAverage"
 msgstr "{$count} ({$average}/ano)"
+
+msgid "plugins.importexport.common.cliError"
+msgstr "ERRO:"
+
+msgid "plugins.importexport.common.error.unknownContext"
+msgstr "O caminho especificado da revista, \"{$contextPath}\", não existe."
