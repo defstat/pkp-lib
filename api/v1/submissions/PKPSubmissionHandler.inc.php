@@ -34,6 +34,11 @@ class PKPSubmissionHandler extends APIHandler {
 		'publishPublication',
 		'unpublishPublication',
 		'deletePublication',
+		'getContributors',
+		'getContributor',
+		'addContributor',
+		'deleteContributor',
+		'editContributor',
 	];
 
 	/** @var array Handlers that must be authorized to write to a publication */
@@ -95,6 +100,16 @@ class PKPSubmissionHandler extends APIHandler {
 					'handler' => [$this, 'getPublication'],
 					'roles' => [ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT, ROLE_ID_REVIEWER, ROLE_ID_AUTHOR],
 				],
+				[
+					'pattern' => $this->getEndpointPattern() . '/{submissionId:\d+}/publications/{publicationId:\d+}/contributors',
+					'handler' => [$this, 'getContributors'],
+					'roles' => [ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT, ROLE_ID_REVIEWER, ROLE_ID_AUTHOR],
+				],
+				[
+					'pattern' => $this->getEndpointPattern() . '/{submissionId:\d+}/publications/{publicationId:\d+}/contributors/{contributorId:\d+}',
+					'handler' => [$this, 'getContributor'],
+					'roles' => [ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT, ROLE_ID_REVIEWER, ROLE_ID_AUTHOR],
+				],
 			],
 			'POST' => [
 				[
@@ -110,6 +125,11 @@ class PKPSubmissionHandler extends APIHandler {
 				[
 					'pattern' => $this->getEndpointPattern() . '/{submissionId:\d+}/publications/{publicationId:\d+}/version',
 					'handler' => [$this, 'versionPublication'],
+					'roles' => [ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT],
+				],
+				[
+					'pattern' => $this->getEndpointPattern() . '/{submissionId:\d+}/publications/{publicationId:\d+}/contributors',
+					'handler' => [$this, 'addContributor'],
 					'roles' => [ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT],
 				],
 			],
@@ -134,6 +154,11 @@ class PKPSubmissionHandler extends APIHandler {
 					'handler' => [$this, 'unpublishPublication'],
 					'roles' => [ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT],
 				],
+				[
+					'pattern' => $this->getEndpointPattern() . '/{submissionId:\d+}/publications/{publicationId:\d+}/contributors/{contributorId:\d+}',
+					'handler' => [$this, 'editContributor'],
+					'roles' => [ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT, ROLE_ID_AUTHOR],
+				],
 			],
 			'DELETE' => [
 				[
@@ -144,6 +169,11 @@ class PKPSubmissionHandler extends APIHandler {
 				[
 					'pattern' => $this->getEndpointPattern() . '/{submissionId:\d+}/publications/{publicationId:\d+}',
 					'handler' => [$this, 'deletePublication'],
+					'roles' => [ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT],
+				],
+				[
+					'pattern' => $this->getEndpointPattern() . '/{submissionId:\d+}/publications/{publicationId:\d+}/contributors/{contributorId:\d+}',
+					'handler' => [$this, 'deleteContributor'],
 					'roles' => [ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT],
 				],
 			],
@@ -874,5 +904,250 @@ class PKPSubmissionHandler extends APIHandler {
 		Services::get('publication')->delete($publication);
 
 		return $response->withJson($publicationProps, 200);
+	}
+
+	/**
+	 * Get one of a publication's contributors
+	 *
+	 * @param $slimRequest Request Slim request object
+	 * @param $response Response object
+	 * @param array $args arguments
+	 * @return Response
+	 */
+	public function getContributor($slimRequest, $response, $args) {
+		$request = $this->getRequest();
+		$submission = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION);
+
+		$publication = Services::get('publication')->get((int) $args['publicationId']);
+		$author = Services::get('author')->get((int) $args['contributorId']);
+
+		if (!$publication) {
+			return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
+		}
+
+		if (!$author) {
+			return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
+		}
+
+		if ($submission->getId() !== $publication->getData('submissionId')) {
+			return $response->withStatus(403)->withJsonError('api.publications.403.submissionsDidNotMatch');
+		}
+
+		if ($publication->getId() !== $author->getData('publicationId')) {
+			return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
+		}
+
+		$data = Services::get('author')->getFullProperties(
+			$author,
+			[
+				'request' => $request,
+			]
+		);
+
+		return $response->withJson($data, 200);
+	}
+
+	/**
+	 * Get all publication's contributors
+	 *
+	 * @param $slimRequest Request Slim request object
+	 * @param $response Response object
+	 * @param $args array arguments
+	 * @return Response
+	 */
+	public function getContributors($slimRequest, $response, $args) {
+		$request = $this->getRequest();
+
+		$submission = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION);
+		$publication = Services::get('publication')->get((int) $args['publicationId']);
+
+		if (!$publication) {
+			return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
+		}
+
+		if ($submission->getId() !== $publication->getData('submissionId')) {
+			return $response->withStatus(403)->withJsonError('api.publications.403.submissionsDidNotMatch');
+		}
+
+		$items = [];
+		foreach ($publication->getData('authors') as $author) {
+			$items[] = Services::get('author')->getSummaryProperties(
+				$author,
+				[
+					'request' => $request,
+				]
+			);
+		}
+
+		if ($publication->getData('authors')) {
+			$data = [
+				'itemsMax' => count($items),
+				'items' => $items,
+			];
+		}
+
+		return $response->withJson($data, 200);
+	}
+
+	/**
+	 * Add a new contributor to publication
+	 *
+	 * This will create a new contributor from scratch.
+	 *
+	 * @param $slimRequest Request Slim request object
+	 * @param $response Response object
+	 * @param array $args arguments
+	 * @return Response
+	 */
+	public function addContributor($slimRequest, $response, $args) {
+		$request = $this->getRequest();
+		$submission = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION);
+		$publication = Services::get('publication')->get((int) $args['publicationId']);
+
+		$params = $this->convertStringsToSchema(SCHEMA_AUTHOR, $slimRequest->getParsedBody());
+		$params['publicationId'] = $publication->getId();
+
+		$submissionContext = $request->getContext();
+		if (!$submissionContext || $submissionContext->getId() !== $submission->getData('contextId')) {
+			$submissionContext = Services::get('context')->get($submission->getData('contextId'));
+		}
+		$primaryLocale = $submissionContext->getPrimaryLocale();
+		$allowedLocales = $submissionContext->getData('supportedSubmissionLocales');
+
+		// A publication may have a different primary locale
+		if (!empty($params['locale']) && in_array($params['locale'], $allowedLocales)) {
+			$primaryLocale = $params['locale'];
+		}
+
+		$errors = Services::get('author')->validate(VALIDATE_ACTION_ADD, $params, $allowedLocales, $primaryLocale);
+
+		if (!empty($errors)) {
+			return $response->withStatus(400)->withJson($errors);
+		}
+
+		$authorDao = DAORegistry::getDAO('AuthorDAO'); /** @var $authorDao AuthorDAO */
+		$author = $authorDao->newDataObject();
+		$author->setAllData($params);
+		$author = Services::get('author')->add($author, $request);
+		$authorProps = Services::get('author')->getFullProperties(
+			$author,
+			[
+				'request' => $request,
+			]
+		);
+
+		return $response->withJson($authorProps, 200);
+	}
+
+	/**
+	 * Delete one of this publication's contributors
+	 *
+	 * @param $slimRequest Request Slim request object
+	 * @param $response Response object
+	 * @param array $args arguments
+	 * @return Response
+	 */
+	public function deleteContributor($slimRequest, $response, $args) {
+		$request = $this->getRequest();
+		$submission = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION);
+		$publication = Services::get('publication')->get((int) $args['publicationId']);
+		$author = Services::get('author')->get((int) $args['contributorId']);
+
+		if (!$publication) {
+			return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
+		}
+
+		if ($submission->getId() !== $publication->getData('submissionId')) {
+			return $response->withStatus(403)->withJsonError('api.publications.403.submissionsDidNotMatch');
+		}
+
+		if (!$author) {
+			return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
+		}
+
+		if ($publication->getId() !== $author->getData('publicationId')) {
+			return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
+		}
+
+		$authorProps = Services::get('author')->getFullProperties(
+			$author,
+			[
+				'request' => $request,
+			]
+		);
+
+		Services::get('author')->delete($author);
+
+		return $response->withJson($authorProps, 200);
+	}
+
+	/**
+	 * Edit one of this publication's contributors
+	 *
+	 * @param $slimRequest Request Slim request object
+	 * @param $response Response object
+	 * @param array $args arguments
+	 * @return Response
+	 */
+	public function editContributor($slimRequest, $response, $args) {
+		$request = $this->getRequest();
+		$submission = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION);
+		$currentUser = $request->getUser();
+		$publication = Services::get('publication')->get((int) $args['publicationId']);
+		$author = Services::get('author')->get((int) $args['contributorId']);
+
+		if (!$publication) {
+			return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
+		}
+
+		if (!$author) {
+			return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
+		}
+
+		if ($submission->getId() !== $publication->getData('submissionId')) {
+			return $response->withStatus(403)->withJsonError('api.publications.403.submissionsDidNotMatch');
+		}
+
+		// Publications can not be edited when they are published
+		if ($publication->getData('status') === STATUS_PUBLISHED) {
+			return $response->withStatus(403)->withJsonError('api.publication.403.cantEditPublished');
+		}
+
+		// Prevent users from editing publications if they do not have permission. Except for admins.
+		$userRoles = $this->getAuthorizedContextObject(ASSOC_TYPE_USER_ROLES);
+		if (!in_array(ROLE_ID_SITE_ADMIN, $userRoles) && !Services::get('submission')->canEditPublication($submission->getId(), $currentUser->getId())) {
+			return $response->withStatus(403)->withJsonError('api.submissions.403.userCantEdit');
+		}
+
+		$params = $this->convertStringsToSchema(SCHEMA_AUTHOR, $slimRequest->getParsedBody());
+		$params['id'] = $author->getId();
+
+		$submissionContext = $request->getContext();
+		if (!$submissionContext || $submissionContext->getId() !== $submission->getData('contextId')) {
+			$submissionContext = Services::get('context')->get($submission->getData('contextId'));
+		}
+		$primaryLocale = $publication->getData('locale');
+		$allowedLocales = $submissionContext->getData('supportedSubmissionLocales');
+
+		if ($publication->getId() !== $author->getData('publicationId')) {
+			return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
+		}
+
+		$errors = Services::get('author')->validate(VALIDATE_ACTION_EDIT, $params, $allowedLocales, $primaryLocale);
+
+		if (!empty($errors)) {
+			return $response->withStatus(400)->withJson($errors);
+		}
+
+		$author = Services::get('author')->edit($author, $params, $request);
+
+		$authorProps = Services::get('author')->getFullProperties(
+			$author,
+			[
+				'request' => $request,
+			]
+		);
+
+		return $response->withJson($authorProps, 200);
 	}
 }
