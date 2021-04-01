@@ -198,6 +198,7 @@ abstract class PKPWorkflowHandler extends Handler {
 
 		$submissionApiUrl = $request->getDispatcher()->url($request, PKPApplication::ROUTE_API, $submissionContext->getData('urlPath'), 'submissions/' . $submission->getId());
 		$latestPublicationApiUrl = $request->getDispatcher()->url($request, PKPApplication::ROUTE_API, $submissionContext->getData('urlPath'), 'submissions/' . $submission->getId() . '/publications/' . $latestPublication->getId());
+		$contributorApiUrl = $request->getDispatcher()->url($request, PKPApplication::ROUTE_API, $submissionContext->getData('urlPath'), 'submissions/' . $submission->getId() . '/publications/' . $latestPublication->getId() . '/contributors/' . $latestPublication->getData('authors')[0]->getId());
 
 		$contributorsGridUrl = $request->getDispatcher()->url(
 			$request,
@@ -248,6 +249,7 @@ abstract class PKPWorkflowHandler extends Handler {
 		$citationsForm = new PKP\components\forms\publication\PKPCitationsForm($latestPublicationApiUrl, $latestPublication);
 		$publicationLicenseForm = new PKP\components\forms\publication\PKPPublicationLicenseForm($latestPublicationApiUrl, $locales, $latestPublication, $submissionContext, $authorUserGroups);
 		$titleAbstractForm = new PKP\components\forms\publication\PKPTitleAbstractForm($latestPublicationApiUrl, $locales, $latestPublication);
+		$contributorForm = new PKP\components\forms\publication\PKPContributorForm($contributorApiUrl, $locales, $latestPublication->getData('authors')[0]);
 
 		// Import constants
 		import('classes.submission.Submission');
@@ -324,6 +326,7 @@ abstract class PKPWorkflowHandler extends Handler {
 				FORM_CITATIONS => $citationsForm->getConfig(),
 				FORM_PUBLICATION_LICENSE => $publicationLicenseForm->getConfig(),
 				FORM_TITLE_ABSTRACT => $titleAbstractForm->getConfig(),
+				FORM_CONTRIBUTOR => $contributorForm->getConfig(),
 			],
 			'contributorsGridUrl' => $contributorsGridUrl,
 			'currentPublication' => $currentPublicationProps,
