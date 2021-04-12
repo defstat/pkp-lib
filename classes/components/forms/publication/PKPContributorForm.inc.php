@@ -15,6 +15,7 @@ namespace PKP\components\forms\publication;
 use \PKP\components\forms\FormComponent;
 use \PKP\components\forms\FieldText;
 use \PKP\components\forms\FieldRichTextarea;
+use \PKP\components\forms\FieldOptions;
 
 define('FORM_CONTRIBUTOR', 'contributor');
 
@@ -23,29 +24,49 @@ class PKPContributorForm extends FormComponent {
 	public $id = FORM_CONTRIBUTOR;
 
 	/** @copydoc FormComponent::$method */
-	public $method = 'PUT';
+	public $method = 'POST';
 
 	/**
 	 * Constructor
 	 *
 	 * @param $action string URL to submit the form to
 	 * @param $locales array Supported locales
-	 * @param $author Author The publication to change settings for
+	 * @param $context \Context The publication to change settings for
 	 */
-	public function __construct($action, $locales, $author) {
+	public function __construct($action, $locales, $context) {
 		$this->action = $action;
 		$this->locales = $locales;
+
+		$userGroupDao = \DAORegistry::getDAO('UserGroupDAO'); /** @var $userGroupDao \UserGroupDAO */
+		$authorUserGroups = $userGroupDao->getByRoleId($context->getId(), ROLE_ID_AUTHOR)->toArray();
+
+		$authorUserGroupsOptions = [];
+		foreach ($authorUserGroups as $authorUserGroup) {
+			$authorUserGroupsOptions[] = [
+				'value' => (int) $authorUserGroup->getId(),
+				'label' => $authorUserGroup->getLocalizedName(),
+			];
+		}
 
 		$this->addField(new FieldText('givenName', [
 				'label' => __('user.givenName'),
 				'isMultilingual' => true,
-				'value' => $author->getData('givenName'),
+				// 'value' => $author->getData('givenName'),
 				'isRequired' => true
 			]))
 			->addField(new FieldText('familyName', [
 				'label' => __('user.familyName'),
 				'isMultilingual' => true,
-				'value' => $author->getData('familyName'),
-			]));
+				// 'value' => $author->getData('familyName'),
+			]))
+			->addField(new FieldText('email', [
+				'label' => __('about.contact'),
+				'isRequired' => true,
+			]))
+			->addField(new FieldOptions('userGroupId', [
+				'label' => __('submission.submit.contributorRole'),
+				'type' => 'radio',
+				'options' => $authorUserGroupsOptions,
+			]));;
 	}
 }
