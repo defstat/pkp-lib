@@ -115,7 +115,14 @@ class Schema extends \PKP\core\maps\Schema
                     if ($this->anonymize) {
                         $output[$prop] = [];
                     } else {
-                        $output[$prop] = Repo::author()->getSchemaMap()->summarizeMany($publication->getData('authors'));
+                        $authors = Repo::author()->getMany(
+                            Repo::author()
+                                ->getCollector()
+                                ->filterByPublicationIds([$publication->getId()])
+                                ->orderBy(Repo::author()->getCollector()::ORDERBY_SEQUENCE)
+                        );
+
+                        $output[$prop] = Repo::author()->getSchemaMap()->summarizeMany($authors);
                     }
                     break;
                 case 'authorsString':

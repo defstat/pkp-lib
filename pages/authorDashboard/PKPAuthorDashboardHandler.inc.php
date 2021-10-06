@@ -216,19 +216,6 @@ abstract class PKPAuthorDashboardHandler extends Handler
         $submissionApiUrl = $request->getDispatcher()->url($request, PKPApplication::ROUTE_API, $submissionContext->getData('urlPath'), 'submissions/' . $submission->getId());
         $latestPublicationApiUrl = $request->getDispatcher()->url($request, PKPApplication::ROUTE_API, $submissionContext->getData('urlPath'), 'submissions/' . $submission->getId() . '/publications/' . $latestPublication->getId());
 
-        $contributorsGridUrl = $request->getDispatcher()->url(
-            $request,
-            PKPApplication::ROUTE_COMPONENT,
-            null,
-            'grid.users.author.AuthorGridHandler',
-            'fetchGrid',
-            null,
-            [
-                'submissionId' => $submission->getId(),
-                'publicationId' => '__publicationId__',
-            ]
-        );
-
         $submissionLibraryUrl = $request->getDispatcher()->url(
             $request,
             PKPApplication::ROUTE_COMPONENT,
@@ -297,7 +284,6 @@ abstract class PKPAuthorDashboardHandler extends Handler
                 FORM_TITLE_ABSTRACT => $titleAbstractForm->getConfig(),
                 FORM_CITATIONS => $citationsForm->getConfig(),
             ],
-            'contributorsGridUrl' => $contributorsGridUrl,
             'currentPublication' => $currentPublicationProps,
             'publicationFormIds' => [
                 FORM_TITLE_ABSTRACT,
