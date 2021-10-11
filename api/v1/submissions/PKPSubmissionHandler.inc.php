@@ -1190,7 +1190,6 @@ class PKPSubmissionHandler extends APIHandler
 
         $publication = Repo::publication()->get((int) $args['publicationId']);
 
-
         if (!$publication) {
             return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
         }
@@ -1217,6 +1216,6 @@ class PKPSubmissionHandler extends APIHandler
             }
         }
 
-        return $response->withJson(true);
+        return $response->withJson($publication->getId());
     }
 }

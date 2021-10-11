@@ -79,7 +79,7 @@ class DAO extends EntityDAO
             ->join('publications as p', 'a.publication_id', '=', 'p.publication_id')
             ->join('submissions as s', 'p.submission_id', '=', 's.submission_id')
             ->where('a.author_id', '=', $id)
-            ->select(['*', 's.locale AS submission_locale'])
+            ->select(['a.*', 's.locale AS submission_locale'])
             ->first();
 
         return $row ? $this->fromRow($row) : null;
@@ -113,7 +113,7 @@ class DAO extends EntityDAO
     {
         $rows = $query
             ->getQueryBuilder()
-            ->select(['*', 's.locale AS submission_locale'])
+            ->select(['a.*', 's.locale AS submission_locale'])
             ->get();
 
         return LazyCollection::make(function () use ($rows) {

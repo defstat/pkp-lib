@@ -161,6 +161,10 @@ class PKPPublication extends \PKP\core\DataObject
             $authors = $authors->filter(function ($author, $key) {
                 return $author->getData('includeInBrowse');
             });
+
+            $authors = $authors->sortBy(function ($author, $key) {
+                return $author->getData('seq');
+            });
         }
 
         $str = '';
@@ -209,12 +213,22 @@ class PKPPublication extends \PKP\core\DataObject
      *
      * @return string
      */
-    public function getShortAuthorString($defaultLocale = null)
+    public function getShortAuthorString($defaultLocale = null, $includeInBrowseOnly = false)
     {
         $authors = $this->getData('authors');
 
         if (!$authors->count()) {
             return '';
+        }
+
+        if ($includeInBrowseOnly) {
+            $authors = $authors->filter(function ($author, $key) {
+                return $author->getData('includeInBrowse');
+            });
+
+            $authors = $authors->sortBy(function ($author, $key) {
+                return $author->getData('seq');
+            });
         }
 
         $firstAuthor = $authors->first();
