@@ -206,13 +206,19 @@ abstract class PKPWorkflowHandler extends Handler
 
         $submissionApiUrl = $request->getDispatcher()->url($request, PKPApplication::ROUTE_API, $submissionContext->getData('urlPath'), 'submissions/' . $submission->getId());
         $latestPublicationApiUrl = $request->getDispatcher()->url($request, PKPApplication::ROUTE_API, $submissionContext->getData('urlPath'), 'submissions/' . $submission->getId() . '/publications/' . $latestPublication->getId());
-        // $contributorApiUrl = $request->getDispatcher()->url($request, PKPApplication::ROUTE_API, $request->getContext()->getPath('urlPath'), 'submissions/' . $submission->getId() . '/publications/' . $latestPublication->getId() . '/contributors');
 
         $contributorApiUrl = $request->getDispatcher()->url(
             $request,
             PKPApplication::ROUTE_API,
             $request->getContext()->getPath('urlPath'),
             'submissions/' . $submission->getId() . '/publications/__publicationId__/contributors'
+        );
+
+        $contributorPublicationApiUrl = $request->getDispatcher()->url(
+            $request,
+            PKPApplication::ROUTE_API,
+            $request->getContext()->getPath('urlPath'),
+            'submissions/' . $submission->getId() . '/publications'
         );
 
         $editorialHistoryUrl = $request->getDispatcher()->url(
@@ -273,7 +279,8 @@ abstract class PKPWorkflowHandler extends Handler
                 'form' => $contributorForm,
                 'getParams' => $getParams,
                 'items' => $items,
-                'itemsMax' => $itemsMax
+                'itemsMax' => $itemsMax,
+                'publicationApiUrl' => $contributorPublicationApiUrl,
             ]
         );
 
@@ -394,6 +401,10 @@ abstract class PKPWorkflowHandler extends Handler
 
         $templateMgr->setLocaleKeys([
             'common.order',
+            'author.users.contributor.setPrincipalContact',
+            'author.users.contributor.principalContact',
+            'common.publication.authorsString',
+            'author.users.contributor.notIncludedInBrowse',
         ]);
 
         $templateMgr->setState($state);

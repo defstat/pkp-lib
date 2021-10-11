@@ -300,6 +300,9 @@ msgstr "Declined"
 msgid "common.delete"
 msgstr "Delete"
 
+msgid "common.publication.authorsString"
+msgstr "Publication Authors Display"
+
 msgid "common.deleting"
 msgstr "Deleting"
 

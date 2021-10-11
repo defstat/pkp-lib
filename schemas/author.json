@@ -12,12 +12,18 @@
 			"type": "string",
 			"description": "The scholarly institution this contributor is employed by or affiliated with.",
 			"multilingual": "true",
-			"apiSummary": true
+			"apiSummary": true,
+			"validation": [
+				"nullable"
+			]
 		},
 		"biography": {
 			"type": "string",
 			"description": "An optional bio statement about this contributor.",
-			"multilingual": "true"
+			"multilingual": "true",
+			"validation": [
+				"nullable"
+			]
 		},
 		"country": {
 			"type": "string"
@@ -32,15 +38,15 @@
 		"familyName": {
 			"type": "string",
 			"multilingual": "true",
-			"apiSummary": true
-		},
-		"givenName": {
-			"type": "string",
-			"multilingual": "true",
 			"apiSummary": true,
 			"validation": [
 				"nullable"
 			]
+		},
+		"givenName": {
+			"type": "string",
+			"multilingual": "true",
+			"apiSummary": true
 		},
 		"id": {
 			"type": "integer",
@@ -64,7 +70,10 @@
 			"type": "string",
 			"description": "An optional field for contributors to specify how they prefer to be identified in this publication.",
 			"multilingual": "true",
-			"apiSummary": true
+			"apiSummary": true,
+			"validation": [
+				"nullable"
+			]
 		},
 		"publicationId": {
 			"type": "integer",
@@ -85,12 +94,18 @@
 			"type": "string",
 			"description": "An optional URL to this contributor's webpage.",
 			"validation": [
-				"url"
+				"url",
+				"nullable"
 			]
 		},
 		"userGroupId": {
 			"type": "integer",
 			"description": "in which user group should this contributor be identified. Usually one of the author roles, such as Author or Translator.",
+			"apiSummary": true
+		},
+		"userGroupLabel": {
+			"type": "string",
+			"description": "Usually one of the author roles, such as Author or Translator.",
 			"apiSummary": true
 		}
 	}

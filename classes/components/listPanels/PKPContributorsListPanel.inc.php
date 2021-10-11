@@ -31,6 +31,9 @@ class PKPContributorsListPanel extends ListPanel
     /** @var int Max number of items available to display in this list panel  */
     public $itemsMax = [];
 
+    /** @var string URL to the publication API endpoint */
+    public $publicationApiUrl = '';
+
     /**
      * Initialize the form with config parameters
      *
@@ -59,6 +62,7 @@ class PKPContributorsListPanel extends ListPanel
             [
                 'addContributorLabel' => __('grid.action.addContributor'),
                 'apiUrl' => $this->apiUrl,
+                'publicationApiUrl' => $this->publicationApiUrl,
                 'confirmDeleteMessage' => __('common.confirmDelete'),
                 'count' => $this->count,
                 'deleteContributorLabel' => __('grid.action.delete'),

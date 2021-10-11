@@ -452,6 +452,12 @@ msgstr "Role"
 msgid "author.users.contributor.principalContact"
 msgstr "Primary Contact"
 
+msgid "author.users.contributor.notIncludedInBrowse"
+msgstr "Not included"
+
+msgid "author.users.contributor.setPrincipalContact"
+msgstr "Set Primary Contact"
+
 msgid "author.users.contributor.includeInBrowse"
 msgstr "In Browse Lists"
 

@@ -781,6 +781,10 @@ class PKPSubmissionHandler extends APIHandler
         $primaryLocale = $publication->getData('locale');
         $allowedLocales = $submissionContext->getData('supportedSubmissionLocales');
 
+        if (!isset($primaryLocale)) {
+            $primaryLocale = $submissionContext->getData('primaryLocale');
+        }
+
         $errors = Repo::publication()->validate($publication, $params, $allowedLocales, $primaryLocale);
 
         if (!empty($errors)) {

@@ -108,6 +108,13 @@ class PKPContributorForm extends FormComponent
                 'label' => __('submission.submit.contributorRole'),
                 'type' => 'radio',
                 'options' => $authorUserGroupsOptions,
+            ]))
+            ->addField(new FieldOptions('includeInBrowse', [
+                'label' => __('submission.submit.includeInBrowse'),
+                'type' => 'checkbox',
+                'options' => [
+                    ['value' => true, 'label' => __('submission.submit.includeInBrowse')],
+                ]
             ]));
     }
 }
