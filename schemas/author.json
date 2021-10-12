@@ -46,7 +46,10 @@
 		"givenName": {
 			"type": "string",
 			"multilingual": "true",
-			"apiSummary": true
+			"apiSummary": true,
+			"validation": [
+				"nullable"
+			]
 		},
 		"id": {
 			"type": "integer",
@@ -63,6 +66,7 @@
 			"description": "The ORCID of this contributor. See: https://orcid.org/",
 			"apiSummary": true,
 			"validation": [
+				"nullable",
 				"orcid"
 			]
 		},

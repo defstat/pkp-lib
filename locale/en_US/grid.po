@@ -453,7 +453,7 @@ msgid "author.users.contributor.principalContact"
 msgstr "Primary Contact"
 
 msgid "author.users.contributor.notIncludedInBrowse"
-msgstr "Not included"
+msgstr "Not in Publication Lists"
 
 msgid "author.users.contributor.setPrincipalContact"
 msgstr "Set Primary Contact"
