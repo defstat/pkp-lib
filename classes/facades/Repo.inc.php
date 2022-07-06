@@ -32,6 +32,7 @@ use PKP\decision\Repository as DecisionRepository;
 use PKP\emailTemplate\Repository as EmailTemplateRepository;
 use PKP\submissionFile\Repository as SubmissionFileRepository;
 use PKP\mail\Repository as MailRepository;
+use PKP\userGroup\Repository as UserGroupRepository;
 
 class Repo
 {
@@ -73,5 +74,10 @@ class Repo
     public static function mailable(): MailRepository
     {
         return app(MailRepository::class);
+    }
+
+    public static function userGroup(): UserGroupRepository
+    {
+        return app(UserGroupRepository::class);
     }
 }
