@@ -207,7 +207,7 @@ class UserGroupForm extends Form
         } else {
             $userGroup = Repo::userGroup()->get($userGroupId);
             $userGroup = $this->_setUserGroupLocaleFields($userGroup, $request);
-            $userGroup->setShowTitle($this->getData('showTitle'));
+            $userGroup->setShowTitle(is_null($this->getData('showTitle'))?false:$this->getData('showTitle'));
             $userGroup->setPermitSelfRegistration($this->getData('permitSelfRegistration') && in_array($userGroup->getRoleId(), $this->getPermitSelfRegistrationRoles()));
             $userGroup->setPermitMetadataEdit($this->getData('permitMetadataEdit') && !in_array($userGroup->getRoleId(), UserGroupDAO::getNotChangeMetadataEditPermissionRoles()));
             if (in_array($userGroup->getRoleId(), UserGroupDAO::getNotChangeMetadataEditPermissionRoles())) {
@@ -226,7 +226,7 @@ class UserGroupForm extends Form
 
             $userGroup->setRecommendOnly($this->getData('recommendOnly') && in_array($userGroup->getRoleId(), $this->getRecommendOnlyRoles()));
 
-            $userGroupDao->updateObject($userGroup);
+            Repo::userGroup()->edit($userGroup, []);
         }
 
         // After we have created/edited the user group, we assign/update its stages.
