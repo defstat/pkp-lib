@@ -1,4 +1,5 @@
 <?php
+use APP\facades\Repo;
 
 /**
  * @file plugins/importexport/users/filter/NativeXmlUserGroupFilter.inc.php
@@ -77,7 +78,7 @@ class NativeXmlUserGroupFilter extends NativeImportFilter
 
         // Create the UserGroup object.
         $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $userGroup = $userGroupDao->newDataObject();
+        $userGroup = Repo::userGroup()->newDataObject();
         $userGroup->setContextId($context->getId());
 
         // Extract the name node element to see if this user group exists already.
@@ -94,18 +95,18 @@ class NativeXmlUserGroupFilter extends NativeImportFilter
             for ($n = $node->firstChild; $n !== null; $n = $n->nextSibling) {
                 if (is_a($n, 'DOMElement')) {
                     switch ($n->tagName) {
-                case 'role_id': $userGroup->setRoleId($n->textContent); break;
-                case 'is_default': $userGroup->setDefault($n->textContent); break;
-                case 'show_title': $userGroup->setShowTitle($n->textContent); break;
-                case 'name': $userGroup->setName($n->textContent, $n->getAttribute('locale')); break;
-                case 'abbrev': $userGroup->setAbbrev($n->textContent, $n->getAttribute('locale')); break;
-                case 'permit_self_registration': $userGroup->setPermitSelfRegistration($n->textContent); break;
-                case 'permit_metadata_edit': $userGroup->setPermitMetadataEdit($n->textContent); break;
-            }
+                        case 'role_id': $userGroup->setRoleId($n->textContent); break;
+                        case 'is_default': $userGroup->setDefault($n->textContent); break;
+                        case 'show_title': $userGroup->setShowTitle($n->textContent); break;
+                        case 'name': $userGroup->setName($n->textContent, $n->getAttribute('locale')); break;
+                        case 'abbrev': $userGroup->setAbbrev($n->textContent, $n->getAttribute('locale')); break;
+                        case 'permit_self_registration': $userGroup->setPermitSelfRegistration($n->textContent); break;
+                        case 'permit_metadata_edit': $userGroup->setPermitMetadataEdit($n->textContent); break;
+                    }
                 }
             }
 
-            $userGroupId = $userGroupDao->insertObject($userGroup);
+            $userGroupId = Repo::userGroup()->add($userGroup);
 
             $stageNodeList = $node->getElementsByTagNameNS($deployment->getNamespace(), 'stage_assignments');
             if ($stageNodeList->length == 1) {

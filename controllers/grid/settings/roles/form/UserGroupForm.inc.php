@@ -189,11 +189,11 @@ class UserGroupForm extends Form
 
         // Check if we are editing an existing user group or creating another one.
         if ($userGroupId == null) {
-            $userGroup = $userGroupDao->newDataObject();
+            $userGroup = Repo::userGroup()->newDataObject();
             $userGroup->setRoleId($this->getData('roleId'));
             $userGroup->setContextId($this->getContextId());
             $userGroup->setDefault(false);
-            $userGroup->setShowTitle($this->getData('showTitle'));
+            $userGroup->setShowTitle(is_null($this->getData('showTitle'))?false:$this->getData('showTitle'));
             $userGroup->setPermitSelfRegistration($this->getData('permitSelfRegistration') && in_array($userGroup->getRoleId(), $this->getPermitSelfRegistrationRoles()));
             $userGroup->setPermitMetadataEdit($this->getData('permitMetadataEdit') && !in_array($this->getData('roleId'), UserGroupDAO::getNotChangeMetadataEditPermissionRoles()));
             if (in_array($this->getData('roleId'), UserGroupDAO::getNotChangeMetadataEditPermissionRoles())) {
@@ -203,7 +203,7 @@ class UserGroupForm extends Form
             $userGroup->setRecommendOnly($this->getData('recommendOnly') && in_array($userGroup->getRoleId(), $this->getRecommendOnlyRoles()));
             $userGroup = $this->_setUserGroupLocaleFields($userGroup, $request);
 
-            $userGroupId = $userGroupDao->insertObject($userGroup);
+            $userGroupId = Repo::userGroup()->add($userGroup);
         } else {
             $userGroup = Repo::userGroup()->get($userGroupId);
             $userGroup = $this->_setUserGroupLocaleFields($userGroup, $request);
@@ -285,12 +285,11 @@ class UserGroupForm extends Form
     /**
      * Set locale fields on a User Group object.
      *
-     * @param UserGroup $userGroup
+     * @param PKP\userGroup\UserGroup $userGroup
      * @param Request $request
      *
-     * @return UserGroup
      */
-    public function _setUserGroupLocaleFields($userGroup, $request)
+    public function _setUserGroupLocaleFields($userGroup, $request) : PKP\userGroup\UserGroup
     {
         $router = $request->getRouter();
         $context = $router->getContext($request);

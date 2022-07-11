@@ -84,35 +84,6 @@ class UserGroupDAO extends DAO
     }
 
     /**
-     * Insert a user group.
-     *
-     * @param UserGroup $userGroup
-     *
-     * @return int Inserted user group ID
-     */
-    public function insertObject($userGroup)
-    {
-        $this->update(
-            'INSERT INTO user_groups
-                (role_id, context_id, is_default, show_title, permit_self_registration, permit_metadata_edit)
-                VALUES
-                (?, ?, ?, ?, ?, ?)',
-            [
-                (int) $userGroup->getRoleId(),
-                (int) $userGroup->getContextId(),
-                $userGroup->getDefault() ? 1 : 0,
-                $userGroup->getShowTitle() ? 1 : 0,
-                $userGroup->getPermitSelfRegistration() ? 1 : 0,
-                $userGroup->getPermitMetadataEdit() ? 1 : 0,
-            ]
-        );
-
-        $userGroup->setId($this->getInsertId());
-        $this->updateLocaleFields($userGroup);
-        return $userGroup->getId();
-    }
-
-    /**
      * Update a user group.
      *
      * @param UserGroup $userGroup
