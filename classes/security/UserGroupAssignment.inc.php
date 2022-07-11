@@ -18,6 +18,7 @@
 namespace PKP\security;
 
 use PKP\db\DAORegistry;
+use APP\facades\Repo;
 
 class UserGroupAssignment extends \PKP\core\DataObject
 {
@@ -45,8 +46,7 @@ class UserGroupAssignment extends \PKP\core\DataObject
     public function setUserGroupId($userGroupId)
     {
         $this->setData('userGroupId', $userGroupId);
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $this->userGroup = $userGroupDao->getById($userGroupId);
+        $this->userGroup = Repo::userGroup()->get($userGroupId);
         return ($this->userGroup) ? true : false;
     }
 

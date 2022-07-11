@@ -48,10 +48,13 @@ class Collector implements CollectorInterface
     public ?bool $isRecommendOnly = null; // getRecommendOnlyGroupIds
 
     /** @var bool|null */
-    public ?bool $isRecommendOnly = null; // getRecommendOnlyGroupIds
+    public ?bool $permitSelfRegistration = null; // getRecommendOnlyGroupIds
 
     /** @var bool|null */
     public ?bool $permitMetadataEdit = null; // getPermitMetadataEditGroupIds
+
+     /** @var bool|null */
+    public ?bool $showTitle = null; // getPermitMetadataEditGroupIds
 
     /** @var array|null */
     public $userIds = null;
@@ -78,20 +81,56 @@ class Collector implements CollectorInterface
     }
 
     /**
-     * Filter by publications
+     * Filter by roles
      */
-    public function filterByPublicationIds(?array $publicationIds): self
+    public function filterByRoleIds(?array $roleIds): self
     {
-        $this->publicationIds = $publicationIds;
+        $this->roleIds = $roleIds;
         return $this;
     }
 
     /**
-     * Filter by include in browse
+     * Filter by contexts
      */
-    public function filterByIncludeInBrowse(?bool $includeInBrowse): self
+    public function filterByStageIds(?array $stageIds): self
     {
-        $this->includeInBrowse = $includeInBrowse;
+        $this->stageIds = $stageIds;
+        return $this;
+    }
+
+    /**
+     * Filter by is default
+     */
+    public function filterByIsDefault(?bool $isDefault): self
+    {
+        $this->isDefault = $isDefault;
+        return $this;
+    }
+
+    /**
+     * Filter by show title
+     */
+    public function filterByShowTitle(?bool $showTitle): self
+    {
+        $this->showTitle = $showTitle;
+        return $this;
+    }
+
+    /**
+     * Filter by permit self registration
+     */
+    public function filterByPermitSelfRegistration(?bool $permitSelfRegistration): self
+    {
+        $this->permitSelfRegistration = $permitSelfRegistration;
+        return $this;
+    }
+
+    /**
+     * Filter by permit metadata edit
+     */
+    public function filterByPermitMetadataEdit(?bool $permitMetadataEdit): self
+    {
+        $this->permitMetadataEdit = $permitMetadataEdit;
         return $this;
     }
 
@@ -101,40 +140,6 @@ class Collector implements CollectorInterface
     public function orderBy(?string $orderBy): self
     {
         $this->orderBy = $orderBy;
-        return $this;
-    }
-
-    /**
-     * Filter by the given and family name
-     *
-     *
-     */
-    public function filterByName(?string $givenName, ?string $familyName): self
-    {
-        $this->givenName = $givenName;
-        $this->familyName = $familyName;
-        return $this;
-    }
-
-    /**
-     * Filter by the specified country code
-     *
-     * @param string $country Country code (2-letter)
-     *
-     * */
-    public function filterByCountry(?string $country): self
-    {
-        $this->country = $country;
-        return $this;
-    }
-
-    /**
-     * Filter by the specified affiliation code
-     *
-     * */
-    public function filterByAffiliation(?string $affiliation): self
-    {
-        $this->affiliation = $affiliation;
         return $this;
     }
 
@@ -162,56 +167,43 @@ class Collector implements CollectorInterface
      */
     public function getQueryBuilder(): Builder
     {
-        $q = DB::table('authors as a')
-            ->join('publications as p', 'a.publication_id', '=', 'p.publication_id')
-            ->join('submissions as s', 'p.submission_id', '=', 's.submission_id');
+        $q = DB::table('user_groups as a');
 
         if (isset($this->contextIds)) {
-            $q->whereIn('s.context_id', $this->contextIds);
+            $q->whereIn('a.context_id', $this->contextIds);
         }
 
-        $q->when($this->familyName !== null, function (Builder $q) {
-            $q->whereIn('a.author_id', function (Builder $q) {
-                $q->select('author_id')
-                    ->from($this->dao->settingsTable)
-                    ->where('setting_name', '=', 'familyName')
-                    ->where('setting_value', $this->familyName);
-            });
-        });
-
-        $q->when($this->givenName !== null, function (Builder $q) {
-            $q->whereIn('a.author_id', function (Builder $q) {
-                $q->select('author_id')
-                    ->from($this->dao->settingsTable)
-                    ->where('setting_name', '=', 'givenName')
-                    ->where('setting_value', $this->givenName);
-            });
-        });
-
-        if (isset($this->publicationIds)) {
-            $q->whereIn('a.publication_id', $this->publicationIds);
+        if (isset($this->roleIds)) {
+            $q->whereIn('a.role_id', $this->roleIds);
         }
 
-        $q->when($this->country !== null, function (Builder $q) {
-            $q->whereIn('a.author_id', function (Builder $q) {
-                $q->select('author_id')
+        // if (isset($this->stageIds)) {
+        //     $q->whereIn('s.context_id', $this->contextIds);
+        // }
+
+        $q->when($this->isRecommendOnly !== null, function (Builder $q) {
+            $q->whereIn('a.user_group_id', function (Builder $q) {
+                $q->select('user_group_id')
                     ->from($this->dao->settingsTable)
-                    ->where('setting_name', '=', 'country')
-                    ->where('setting_value', $this->country);
+                    ->where('setting_name', '=', 'recommendOnly')
+                    ->where('setting_value', $this->isRecommendOnly);
             });
         });
 
-        $q->when($this->affiliation !== null, function (Builder $q) {
-            $q->whereIn('a.author_id', function (Builder $q) {
-                $q->select('author_id')
-                    ->from($this->dao->settingsTable)
-                    ->where('setting_name', '=', 'affiliation')
-                    ->where('setting_value', $this->affiliation);
-            });
-        });
+        if ($this->isDefault) {
+            $q->where('a.is_default', $this->isDefault);
+        }
 
-        if ($this->includeInBrowse) {
-            $q->where('a.include_in_browse', $this->includeInBrowse);
+        if ($this->permitSelfRegistration) {
+            $q->where('a.permit_self_registration', $this->permitSelfRegistration);
+        }
+
+        if ($this->permitMetadataEdit) {
+            $q->where('a.permit_metadata_edit', $this->permitMetadataEdit);
+        }
+
+        if ($this->showTitle) {
+            $q->where('a.show_title', $this->showTitle);
         }
 
         if (isset($this->count)) {
@@ -222,20 +214,18 @@ class Collector implements CollectorInterface
             $q->offset($this->offset);
         }
 
-        switch ($this->orderBy) {
-            case self::ORDERBY_SEQUENCE:
-                $q->orderBy('a.seq', 'asc');
-                break;
-            case self::ORDERBY_ID:
-            default:
-                $q->orderBy('a.author_id', 'asc');
-                break;
-        }
+        // switch ($this->orderBy) {
+        //     case self::ORDERBY_SEQUENCE:
+        //         $q->orderBy('a.seq', 'asc');
+        //         break;
+        //     case self::ORDERBY_ID:
+        //     default:
+        //         $q->orderBy('a.author_id', 'asc');
+        //         break;
+        // }
 
         // Add app-specific query statements
-        HookRegistry::call('Author::Collector', [&$q, $this]);
-
-
+        HookRegistry::call('UserGroup::Collector', [&$q, $this]);
 
         return $q;
     }

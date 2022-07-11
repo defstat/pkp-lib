@@ -191,10 +191,9 @@ class RegistrationForm extends Form
             }
 
             if (!Config::getVar('general', 'sitewide_privacy_statement')) {
-                $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
                 $contextIds = [];
                 foreach ($this->getData('userGroupIds') as $userGroupId) {
-                    $userGroup = $userGroupDao->getById($userGroupId);
+                    $userGroup = Repo::userGroup()->get($userGroupId);
                     $contextIds[] = $userGroup->getContextId();
                 }
 

@@ -143,50 +143,6 @@ class UserGroupDAO extends DAO
     }
 
     /**
-     * Delete a user group by its id
-     * will also delete related settings and all the assignments to this group
-     *
-     * @param int $contextId
-     * @param int $userGroupId
-     */
-    public function deleteById($contextId, $userGroupId)
-    {
-        $this->userGroupAssignmentDao->deleteAssignmentsByUserGroupId($userGroupId);
-        $this->update('DELETE FROM user_group_settings WHERE user_group_id = ?', [(int) $userGroupId]);
-        $this->update('DELETE FROM user_groups WHERE user_group_id = ?', [(int) $userGroupId]);
-        $this->removeAllStagesFromGroup($contextId, $userGroupId);
-    }
-
-    /**
-     * Delete a user group.
-     * will also delete related settings and all the assignments to this group
-     *
-     * @param UserGroup $userGroup
-     */
-    public function deleteObject($userGroup)
-    {
-        $this->deleteById($userGroup->getContextId(), $userGroup->getId());
-    }
-
-
-    /**
-     * Delete a user group by its context id
-     *
-     * @param int $contextId
-     */
-    public function deleteByContextId($contextId)
-    {
-        $result = $this->retrieve('SELECT user_group_id FROM user_groups WHERE context_id = ?', [(int) $contextId]);
-
-        for ($i = 1; $row = (array) $result->current(); $i++) {
-            $this->update('DELETE FROM user_group_stage WHERE user_group_id = ?', [(int) $row['user_group_id']]);
-            $this->update('DELETE FROM user_group_settings WHERE user_group_id = ?', [(int) $row['user_group_id']]);
-            $this->update('DELETE FROM user_groups WHERE user_group_id = ?', [(int) $row['user_group_id']]);
-            $result->next();
-        }
-    }
-
-    /**
      * Get the ID of the last inserted user group.
      *
      * @return int
@@ -225,28 +181,6 @@ class UserGroupDAO extends DAO
     }
 
     /**
-     * Get an individual user group
-     *
-     * @param int $userGroupId User group ID
-     * @param int $contextId Optional context ID to use for validation
-     */
-    public function getById($userGroupId, $contextId = null)
-    {
-        $params = [(int) $userGroupId];
-        if ($contextId !== null) {
-            $params[] = (int) $contextId;
-        }
-        $result = $this->retrieve(
-            'SELECT *
-            FROM user_groups
-            WHERE user_group_id = ?' . ($contextId !== null ? ' AND context_id = ?' : ''),
-            $params
-        );
-        $row = (array) $result->current();
-        return $row ? $this->_returnFromRow($row) : null;
-    }
-
-    /**
      * Get a single default user group with a particular roleId
      *
      * @param int $contextId Context ID
@@ -254,7 +188,7 @@ class UserGroupDAO extends DAO
      *
      * @return UserGroup|false
      */
-    public function getDefaultByRoleId($contextId, $roleId)
+    public function getDefaultByRoleId($contextId, $roleId) // INSTALL
     {
         $allDefaults = $this->getByRoleId($contextId, $roleId, true);
         return $allDefaults->next() ?? false;

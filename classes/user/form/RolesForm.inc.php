@@ -42,7 +42,6 @@ class RolesForm extends BaseProfileForm
     {
         $templateMgr = TemplateManager::getManager($request);
 
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
         $userGroupAssignmentDao = DAORegistry::getDAO('UserGroupAssignmentDAO'); /** @var UserGroupAssignmentDAO $userGroupAssignmentDao */
         $userGroupAssignments = $userGroupAssignmentDao->getByUserId($request->getUser()->getId());
         $userGroupIds = [];

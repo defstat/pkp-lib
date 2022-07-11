@@ -156,12 +156,12 @@ class Repository
      */
     public function add(UserGroup $userGroup): int
     {
-        $existingSeq = $userGroup->getData('seq');
+        // $existingSeq = $userGroup->getData('seq');
 
-        if (!isset($existingSeq)) {
-            $nextSeq = $this->dao->getNextSeq($userGroup->getData('publicationId'));
-            $userGroup->setData('seq', $nextSeq);
-        }
+        // if (!isset($existingSeq)) {
+        //     $nextSeq = $this->dao->getNextSeq($userGroup->getData('publicationId'));
+        //     $userGroup->setData('seq', $nextSeq);
+        // }
 
         $userGroupId = $this->dao->insert($userGroup);
         $userGroup = Repo::userGroup()->get($userGroupId);
@@ -176,13 +176,13 @@ class Repository
      */
     public function edit(UserGroup $userGroup, array $params)
     {
-        $newAuthor = Repo::author()->newDataObject(array_merge($author->_data, $params));
+        $newUserGroup = Repo::userGroup()->newDataObject(array_merge($userGroup->_data, $params));
 
-        HookRegistry::call('Author::edit', [$newAuthor, $author, $params]);
+        HookRegistry::call('UserGroup::edit', [$newUserGroup, $userGroup, $params]);
 
-        $this->dao->update($newAuthor);
+        $this->dao->update($newUserGroup);
 
-        Repo::author()->get($newAuthor->getId());
+        Repo::userGroup()->get($newUserGroup->getId());
     }
 
     /**
@@ -190,47 +190,61 @@ class Repository
      */
     public function delete(UserGroup $userGroup)
     {
-        HookRegistry::call('Author::delete::before', [$author]);
-        $this->dao->delete($author);
+        HookRegistry::call('UserGroup::delete::before', [$userGroup]);
+        
+        $this->dao->delete($userGroup);
 
-        $this->dao->resetContributorsOrder($author->getData('publicationId'));
-
-        HookRegistry::call('Author::delete', [$author]);
+        HookRegistry::call('UserGroup::delete', [$userGroup]);
     }
 
     /**
-     * Update author names when publication locale changes.
-     *
-     * @param int $publicationId
-     * @param string $oldLocale
-     * @param string $newLocale
-     */
-    public function changePublicationLocale($publicationId, $oldLocale, $newLocale)
+    * Delete all user groups assigned to a certain context by contextId
+    * 
+    * @param int $contextId 
+    */
+    public function deleteByContextId($contextId)
     {
-        $authors = $this->getMany(
-            $this
-                ->getCollector()
-                ->filterByPublicationIds([$publicationId])
-        );
-
-        foreach ($authors as $author) {
-            if (empty($author->getGivenName($newLocale))) {
-                if (empty($author->getFamilyName($newLocale)) && empty($author->getPreferredPublicName($newLocale))) {
-                    // if no name exists for the new locale
-                    // copy all names with the old locale to the new locale
-                    $author->setGivenName($author->getGivenName($oldLocale), $newLocale);
-                    $author->setFamilyName($author->getFamilyName($oldLocale), $newLocale);
-                    $author->setPreferredPublicName($author->getPreferredPublicName($oldLocale), $newLocale);
-                } else {
-                    // if the given name does not exist, but one of the other names do exist
-                    // copy only the given name with the old locale to the new locale, because the given name is required
-                    $author->setGivenName($author->getGivenName($oldLocale), $newLocale);
-                }
-
-                $this->dao->update($author);
-            }
+        // I may have to use transactions here
+        $collector = Repo::userGroup()->getCollector()->filterByContextIds([$contextId]);
+        $userGroupIds = Repo::userGroup()->getIds($collector);
+        foreach ($userGroupIds as $userGroupId) {
+            $this->dao->deleteById($userGroupId);
         }
     }
+
+    // /**
+    //  * Update author names when publication locale changes.
+    //  *
+    //  * @param int $publicationId
+    //  * @param string $oldLocale
+    //  * @param string $newLocale
+    //  */
+    // public function changePublicationLocale($publicationId, $oldLocale, $newLocale)
+    // {
+    //     $authors = $this->getMany(
+    //         $this
+    //             ->getCollector()
+    //             ->filterByPublicationIds([$publicationId])
+    //     );
+
+    //     foreach ($authors as $author) {
+    //         if (empty($author->getGivenName($newLocale))) {
+    //             if (empty($author->getFamilyName($newLocale)) && empty($author->getPreferredPublicName($newLocale))) {
+    //                 // if no name exists for the new locale
+    //                 // copy all names with the old locale to the new locale
+    //                 $author->setGivenName($author->getGivenName($oldLocale), $newLocale);
+    //                 $author->setFamilyName($author->getFamilyName($oldLocale), $newLocale);
+    //                 $author->setPreferredPublicName($author->getPreferredPublicName($oldLocale), $newLocale);
+    //             } else {
+    //                 // if the given name does not exist, but one of the other names do exist
+    //                 // copy only the given name with the old locale to the new locale, because the given name is required
+    //                 $author->setGivenName($author->getGivenName($oldLocale), $newLocale);
+    //             }
+
+    //             $this->dao->update($author);
+    //         }
+    //     }
+    // }
 
     /**
     * Returns the authors of a given submission by using the submission's current publication
@@ -248,18 +262,18 @@ class Repository
         );
     }
 
-    /**
-    * Reorders the authors of a publication according to the given order of the authors in the provided author array
-    */
-    public function setAuthorsOrder(int $publicationId, array $authors)
-    {
-        $seq = 0;
-        foreach ($authors as $author) {
-            $author->setData('seq', $seq);
+    // /**
+    // * Reorders the authors of a publication according to the given order of the authors in the provided author array
+    // */
+    // public function setAuthorsOrder(int $publicationId, array $authors)
+    // {
+    //     $seq = 0;
+    //     foreach ($authors as $author) {
+    //         $author->setData('seq', $seq);
 
-            $this->dao->update($author);
+    //         $this->dao->update($author);
 
-            $seq++;
-        }
-    }
+    //         $seq++;
+    //     }
+    // }
 }

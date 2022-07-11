@@ -153,12 +153,11 @@ class PKPReviewerReviewStep3Form extends ReviewerReviewForm
 
         $stageAssignmentDao = DAORegistry::getDAO('StageAssignmentDAO'); /** @var StageAssignmentDAO $stageAssignmentDao */
         $stageAssignments = $stageAssignmentDao->getBySubmissionAndStageId($submission->getId(), $submission->getStageId());
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
         $receivedList = []; // Avoid sending twice to the same user.
 
         while ($stageAssignment = $stageAssignments->next()) {
             $userId = $stageAssignment->getUserId();
-            $userGroup = $userGroupDao->getById($stageAssignment->getUserGroupId(), $submission->getContextId());
+            $userGroup = Repo::userGroup()->get($stageAssignment->getUserGroupId());
 
             // Never send reviewer comment notification to users other than mangers and editors.
             if (!in_array($userGroup->getRoleId(), [Role::ROLE_ID_MANAGER, Role::ROLE_ID_SUB_EDITOR]) || in_array($userId, $receivedList)) {

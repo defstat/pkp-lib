@@ -27,6 +27,7 @@ use PKP\security\authorization\internal\WorkflowStageRequiredPolicy;
 use PKP\security\Role;
 
 use PKP\workflow\WorkflowStageDAO;
+use APP\facades\Repo;
 
 class UserGroupGridHandler extends GridHandler
 {
@@ -80,8 +81,8 @@ class UserGroupGridHandler extends GridHandler
         if (in_array($operation, $userGroupRequiredOps)) {
             // Validate the user group object.
             $userGroupId = $request->getUserVar('userGroupId');
-            $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-            $userGroup = $userGroupDao->getById($userGroupId);
+
+            $userGroup = Repo::userGroup()->get($userGroupId);
 
             if (!$userGroup) {
                 fatalError('Invalid user group id!');
@@ -332,7 +333,7 @@ class UserGroupGridHandler extends GridHandler
 
         $usersAssignedToUserGroupCount = $userGroupDao->getContextUsersCount($contextId, $userGroup->getId());
         if ($usersAssignedToUserGroupCount == 0) {
-            if ($userGroupDao->isDefault($userGroup->getId())) {
+            if ($userGroup->getData('isDefault')) {
                 // Can't delete default user groups.
                 $notificationMgr->createTrivialNotification(
                     $user->getId(),
@@ -344,7 +345,8 @@ class UserGroupGridHandler extends GridHandler
                 );
             } else {
                 // We can delete, no user assigned yet.
-                $userGroupDao->deleteObject($userGroup);
+                Repo::userGroup()->delete($userGroup);
+                // $userGroupDao->deleteObject($userGroup);
                 $notificationMgr->createTrivialNotification(
                     $user->getId(),
                     PKPNotification::NOTIFICATION_TYPE_SUCCESS,

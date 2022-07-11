@@ -578,12 +578,7 @@ abstract class PKPContextService implements EntityPropertyInterface, EntityReadI
         $announcementTypeDao = DAORegistry::getDAO('AnnouncementTypeDAO');
         $announcementTypeDao->deleteByContextId($context->getId());
 
-        $contextDao = Application::getContextDao();
-        $contextDao->deleteObject($context);
-
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO');
-        $userGroupDao->deleteAssignmentsByContextId($context->getId());
-        $userGroupDao->deleteByContextId($context->getId());
+        Repo::userGroup()->deleteByContextId($context->getId());
 
         $genreDao = DAORegistry::getDAO('GenreDAO');
         $genreDao->deleteByContextId($context->getId());
@@ -611,6 +606,9 @@ abstract class PKPContextService implements EntityPropertyInterface, EntityReadI
         $fileManager = new FileManager($context->getId());
         $contextPath = Config::getVar('files', 'files_dir') . '/' . $this->contextsFileDirName . '/' . $context->getId();
         $fileManager->rmtree($contextPath);
+
+        $contextDao = Application::getContextDao();
+        $contextDao->deleteObject($context);
 
         HookRegistry::call('Context::delete', [&$context]);
     }

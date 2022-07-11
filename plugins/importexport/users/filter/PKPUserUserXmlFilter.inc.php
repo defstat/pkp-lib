@@ -1,4 +1,5 @@
 <?php
+use APP\facades\Repo;
 
 /**
  * @file plugins/importexport/users/filter/PKPUserUserXmlFilter.inc.php
@@ -139,10 +140,9 @@ class PKPUserUserXmlFilter extends NativeExportFilter
         }
 
         $userGroupAssignmentDao = DAORegistry::getDAO('UserGroupAssignmentDAO'); /** @var UserGroupAssignmentDAO $userGroupAssignmentDao */
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
         $assignedGroups = $userGroupAssignmentDao->getByUserId($user->getId(), $context->getId());
         while ($assignedGroup = $assignedGroups->next()) {
-            $userGroup = $userGroupDao->getById($assignedGroup->getUserGroupId());
+            $userGroup = Repo::userGroup()->get($assignedGroup->getUserGroupId());
             if ($userGroup) {
                 $userNode->appendChild($doc->createElementNS($deployment->getNamespace(), 'user_group_ref', htmlspecialchars($userGroup->getName($context->getPrimaryLocale()), ENT_COMPAT, 'UTF-8')));
             }

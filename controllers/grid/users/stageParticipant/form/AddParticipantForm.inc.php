@@ -157,7 +157,7 @@ class AddParticipantForm extends StageParticipantNotifyForm
 
             $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
             /** @var UserGroup $userGroup */
-            $userGroup = $userGroupDao->getById($stageAssignment->getUserGroupId());
+            $userGroup = Repo::userGroup()->get($stageAssignment->getUserGroupId());
 
             $templateMgr->assign([
                 'assignmentId' => $this->_assignmentId,
@@ -224,7 +224,7 @@ class AddParticipantForm extends StageParticipantNotifyForm
         $submission = $this->getSubmission();
 
         $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        return $userGroupDao->userInGroup($userId, $userGroupId) && $userGroupDao->getById($userGroupId, $submission->getContextId());
+        return $userGroupDao->userInGroup($userId, $userGroupId) && Repo::userGroup()->get($userGroupId);
     }
 
     /**

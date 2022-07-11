@@ -93,7 +93,7 @@ class PKPSubmissionSubmitStep1Form extends SubmissionSubmitForm
         if ($userGroupDao->userInGroup($user->getId(), $userGroupId)) {
             return true;
         }
-        $userGroup = $userGroupDao->getById($userGroupId, $context->getId());
+        $userGroup = Repo::userGroup()->get($userGroupId);
         if ($userGroup->getPermitSelfRegistration()) {
             return true;
         }
@@ -147,7 +147,7 @@ class PKPSubmissionSubmitStep1Form extends SubmissionSubmitForm
         // If the user has manager roles, add manager roles and available author roles to selection
         if (!empty($managerUserGroupAssignments)) {
             foreach ($managerUserGroupAssignments as $managerUserGroupAssignment) {
-                $managerUserGroup = $userGroupDao->getById($managerUserGroupAssignment->getUserGroupId());
+                $managerUserGroup = Repo::userGroup()->get($managerUserGroupAssignment->getUserGroupId());
                 $userGroupNames[$managerUserGroup->getId()] = $managerUserGroup->getLocalizedName();
             }
             $managerGroups = join(__('common.commaListSeparator'), $userGroupNames);
@@ -159,7 +159,7 @@ class PKPSubmissionSubmitStep1Form extends SubmissionSubmitForm
         // else if the user only has existing author roles, add to selection
         } elseif (!empty($authorUserGroupAssignments)) {
             foreach ($authorUserGroupAssignments as $authorUserGroupAssignment) {
-                $authorUserGroup = $userGroupDao->getById($authorUserGroupAssignment->getUserGroupId());
+                $authorUserGroup = Repo::userGroup()->get($authorUserGroupAssignment->getUserGroupId());
                 $userGroupNames[$authorUserGroup->getId()] = $authorUserGroup->getLocalizedName();
             }
             // else the user has no roles, only add available author roles to selection

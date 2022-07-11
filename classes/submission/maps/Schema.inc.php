@@ -407,9 +407,8 @@ class Schema extends \PKP\core\maps\Schema
             if ($currentUser) {
                 $stageAssignmentDao = DAORegistry::getDAO('StageAssignmentDAO'); /** @var StageAssignmentDAO $stageAssignmentDao */
                 $stageAssignmentsResult = $stageAssignmentDao->getBySubmissionAndUserIdAndStageId($submission->getId(), $currentUser->getId(), $stageId);
-                $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
                 while ($stageAssignment = $stageAssignmentsResult->next()) {
-                    $userGroup = $userGroupDao->getById($stageAssignment->getUserGroupId(), $contextId);
+                    $userGroup = Repo::userGroup()->get($stageAssignment->getUserGroupId());
                     $currentUserAssignedRoles[] = (int) $userGroup->getRoleId();
                 }
             }

@@ -58,20 +58,20 @@ class DAO extends EntityDAO
         return app(UserGroup::class);
     }
 
-    /**
-     * @copydoc EntityDAO::get()
-     */
-    public function get(int $id): ?UserGroup
-    {
-        // This is ovveriden due to the need to include submission_locale
-        // to the fromRow function
-        $row = DB::table('user_groups as a')
-            ->where('a.user_group_id', '=', $id)
-            ->select(['a.*'])
-            ->first();
+    // /**
+    //  * @copydoc EntityDAO::get()
+    //  */
+    // public function get(int $id): ?UserGroup
+    // {
+    //     // This is ovveriden due to the need to include submission_locale
+    //     // to the fromRow function
+    //     $row = DB::table('user_groups as a')
+    //         ->where('a.user_group_id', '=', $id)
+    //         ->select(['a.*'])
+    //         ->first();
 
-        return $row ? $this->fromRow($row) : null;
-    }
+    //     return $row ? $this->fromRow($row) : null;
+    // }
 
     /**
      * Get the total count of rows matching the configured query
@@ -142,6 +142,31 @@ class DAO extends EntityDAO
     public function delete(UserGroup $userGroup)
     {
         parent::_delete($userGroup);
+    }
+
+    /**
+     * @copydoc EntityDAO::deleteById()
+     */
+    public function deleteById(int $userGroupId)
+    {
+        DB::beginTransaction();
+
+        try {
+            DB::table('user_user_groups')
+                ->where('user_group_id', '=', $userGroupId)
+                ->delete();
+
+            DB::table('user_group_stage')
+                ->where('user_group_id', '=', $userGroupId)
+                ->delete();
+
+            parent::deleteById($userGroupId);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        }
     }
 
     /**

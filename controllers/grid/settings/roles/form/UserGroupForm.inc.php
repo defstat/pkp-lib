@@ -20,6 +20,7 @@ use PKP\form\Form;
 use PKP\facades\Locale;
 use PKP\security\Role;
 use PKP\workflow\WorkflowStageDAO;
+use APP\facades\Repo;
 
 class UserGroupForm extends Form
 {
@@ -92,7 +93,7 @@ class UserGroupForm extends Form
     public function initData()
     {
         $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $userGroup = $userGroupDao->getById($this->getUserGroupId());
+        $userGroup = Repo::userGroup()->get($this->getUserGroupId());
         $stages = WorkflowStageDAO::getWorkflowStageTranslationKeys();
         $this->setData('stages', $stages);
         $this->setData('assignedStages', []); // sensible default
@@ -204,7 +205,7 @@ class UserGroupForm extends Form
 
             $userGroupId = $userGroupDao->insertObject($userGroup);
         } else {
-            $userGroup = $userGroupDao->getById($userGroupId);
+            $userGroup = Repo::userGroup()->get($userGroupId);
             $userGroup = $this->_setUserGroupLocaleFields($userGroup, $request);
             $userGroup->setShowTitle($this->getData('showTitle'));
             $userGroup->setPermitSelfRegistration($this->getData('permitSelfRegistration') && in_array($userGroup->getRoleId(), $this->getPermitSelfRegistrationRoles()));

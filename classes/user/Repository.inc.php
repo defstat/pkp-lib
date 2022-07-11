@@ -221,9 +221,8 @@ class Repository
         $accessibleStageRoles = [];
 
         // Assigned users have access based on their assignment
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
         while ($stageAssignment = $stageAssignmentsResult->next()) {
-            $userGroup = $userGroupDao->getById($stageAssignment->getUserGroupId(), $contextId);
+            $userGroup = Repo::userGroup()->get($stageAssignment->getUserGroupId());
             $accessibleStageRoles[] = $userGroup->getRoleId();
         }
         $accessibleStageRoles = array_unique($accessibleStageRoles);

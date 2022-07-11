@@ -93,7 +93,7 @@ class PKPSubmissionSubmitStep4Form extends SubmissionSubmitForm
         $user = $request->getUser();
         $submitterAssignments = $stageAssignmentDao->getBySubmissionAndStageId($this->submission->getId(), null, null, $user->getId());
         while ($assignment = $submitterAssignments->next()) {
-            $userGroup = $userGroupDao->getById($assignment->getUserGroupId());
+            $userGroup = Repo::userGroup()->get($assignment->getUserGroupId());
             if ($userGroup->getRoleId() == Role::ROLE_ID_AUTHOR) {
                 $stageAssignmentDao->build($this->submission->getId(), $userGroup->getId(), $assignment->getUserId());
                 // Only assign them once, since otherwise we'll one assignment for each previous stage.

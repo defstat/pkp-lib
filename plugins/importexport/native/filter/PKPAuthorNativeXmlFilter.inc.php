@@ -1,4 +1,5 @@
 <?php
+use APP\facades\Repo;
 
 /**
  * @file plugins/importexport/native/filter/PKPAuthorNativeXmlFilter.inc.php
@@ -97,8 +98,7 @@ class PKPAuthorNativeXmlFilter extends NativeExportFilter
             $authorNode->setAttribute('include_in_browse', 'true');
         }
 
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $userGroup = $userGroupDao->getById($author->getUserGroupId());
+        $userGroup = Repo::userGroup()->get($author->getUserGroupId());
         assert(isset($userGroup));
 
         if (!$userGroup) {
