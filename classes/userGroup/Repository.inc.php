@@ -156,13 +156,6 @@ class Repository
      */
     public function add(UserGroup $userGroup): int
     {
-        // $existingSeq = $userGroup->getData('seq');
-
-        // if (!isset($existingSeq)) {
-        //     $nextSeq = $this->dao->getNextSeq($userGroup->getData('publicationId'));
-        //     $userGroup->setData('seq', $nextSeq);
-        // }
-
         $userGroupId = $this->dao->insert($userGroup);
         $userGroup = Repo::userGroup()->get($userGroupId);
 
@@ -210,6 +203,42 @@ class Repository
         foreach ($userGroupIds as $userGroupId) {
             $this->dao->deleteById($userGroupId);
         }
+    }
+
+    /**
+    * return all user group ids given a certain role id
+    * 
+    * @param int $roleId 
+    * @param int|null $contextId 
+    */
+    public function getArrayIdByRoleId($roleId, $contextId = null) : array
+    {
+        $collector = Repo::userGroup()
+            ->getCollector()->filterByRoleIds([$roleId]);
+        
+        if ($contextId) {
+            $collector->filterByContextIds([$contextId]);
+        }
+
+        return Repo::userGroup()->getIds($collector)->toArray();
+    }
+
+    /**
+    * return all user group ids given a certain role id
+    * 
+    * @param int $roleId 
+    * @param int $contextId 
+    * @param bool $default 
+    */
+    public function getByRoleId($roleId, $contextId, $default = false) : LazyCollection
+    {
+        $collector = Repo::userGroup()
+            ->getCollector()
+            ->filterByRoleIds([$roleId])
+            ->filterByContextIds([$contextId])
+            ->filterByIsDefault($default);
+
+        return Repo::userGroup()->getMany($collector);
     }
 
     // /**

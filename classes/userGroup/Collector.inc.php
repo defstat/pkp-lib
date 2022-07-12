@@ -20,11 +20,10 @@ use PKP\plugins\HookRegistry;
 
 class Collector implements CollectorInterface
 {
-    public const ORDERBY_SEQUENCE = 'sequence';
     public const ORDERBY_ID = 'id';
 
-    /** @var string The default orderBy value for authors collector */
-    public $orderBy = self::ORDERBY_SEQUENCE;
+    /** @var string|null The default orderBy value for authors collector */
+    public $orderBy = null;
 
     /** @var DAO */
     public $dao;
@@ -33,7 +32,7 @@ class Collector implements CollectorInterface
     public $contextIds = null; // contextHasGroup, getByContextId, 
 
     /** @var array|null */
-    public $roleIds = null; // getDefaultByRoleId, getByRoleId, getUserGroupIdsByRoleId
+    public $roleIds = null; // getDefaultByRoleId, getByRoleId
 
     /** @var array|null */
     public $stageIds = null; // getUserGroupsByStage
@@ -58,9 +57,6 @@ class Collector implements CollectorInterface
 
     /** @var array|null */
     public $userIds = null;
-
-    /** Get authors with a specified affiliation */
-    // protected ?string $affiliation = null;
 
     public ?int $count = null;
 
@@ -214,15 +210,12 @@ class Collector implements CollectorInterface
             $q->offset($this->offset);
         }
 
-        // switch ($this->orderBy) {
-        //     case self::ORDERBY_SEQUENCE:
-        //         $q->orderBy('a.seq', 'asc');
-        //         break;
-        //     case self::ORDERBY_ID:
-        //     default:
-        //         $q->orderBy('a.author_id', 'asc');
-        //         break;
-        // }
+        switch ($this->orderBy) {
+            case self::ORDERBY_ID:
+            default:
+                $q->orderBy('a.user_group_id', 'asc');
+                break;
+        }
 
         // Add app-specific query statements
         HookRegistry::call('UserGroup::Collector', [&$q, $this]);

@@ -84,44 +84,6 @@ class UserGroupDAO extends DAO
     }
 
     /**
-     * Get the ID of the last inserted user group.
-     *
-     * @return int
-     */
-    public function getInsertId()
-    {
-        return $this->_getInsertId('user_groups', 'user_group_id');
-    }
-
-    /**
-     * Get field names for which data is localized.
-     *
-     * @return array
-     */
-    public function getLocaleFieldNames()
-    {
-        return ['name', 'abbrev'];
-    }
-
-    /**
-     * @copydoc DAO::getAdditionalFieldNames()
-     */
-    public function getAdditionalFieldNames()
-    {
-        return array_merge(parent::getAdditionalFieldNames(), ['recommendOnly']);
-    }
-
-    /**
-     * Update the localized data for this object
-     */
-    public function updateLocaleFields($userGroup)
-    {
-        $this->updateDataObjectSettings('user_group_settings', $userGroup, [
-            'user_group_id' => (int) $userGroup->getId()
-        ]);
-    }
-
-    /**
      * Get a single default user group with a particular roleId
      *
      * @param int $contextId Context ID
@@ -133,24 +95,6 @@ class UserGroupDAO extends DAO
     {
         $allDefaults = $this->getByRoleId($contextId, $roleId, true);
         return $allDefaults->next() ?? false;
-    }
-
-    /**
-     * Check whether the passed user group id is default or not.
-     *
-     * @param int $userGroupId
-     *
-     * @return bool
-     */
-    public function isDefault($userGroupId)
-    {
-        $result = $this->retrieve(
-            'SELECT is_default FROM user_groups
-            WHERE user_group_id = ?',
-            [(int) $userGroupId]
-        );
-        $row = $result->current();
-        return $row && $row->is_default;
     }
 
     /**
@@ -181,34 +125,6 @@ class UserGroupDAO extends DAO
         );
 
         return new DAOResultFactory($result, $this, '_returnFromRow', [], $sql, $params, $dbResultRange);
-    }
-
-    /**
-     * Get an array of user group ids belonging to a given role
-     *
-     * @param int $roleId ROLE_ID_...
-     * @param int $contextId Context ID
-     */
-    public function getUserGroupIdsByRoleId($roleId, $contextId = null)
-    {
-        $params = [(int) $roleId];
-        if ($contextId) {
-            $params[] = (int) $contextId;
-        }
-
-        $result = $this->retrieve(
-            'SELECT user_group_id
-            FROM user_groups
-                WHERE role_id = ?
-                ' . ($contextId ? ' AND context_id = ?' : ''),
-            $params
-        );
-
-        $userGroupIds = [];
-        foreach ($result as $row) {
-            $userGroupIds[] = (int) $row->user_group_id;
-        }
-        return $userGroupIds;
     }
 
     /**

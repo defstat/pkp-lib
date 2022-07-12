@@ -114,7 +114,7 @@ class CommandLineTool
 
         if (!$this->user) {
             $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-            $adminGroups = $userGroupDao->getUserGroupIdsByRoleId(Role::ROLE_ID_SITE_ADMIN);
+            $adminGroups = Repo::userGroup()->getArrayIdByRoleId(Role::ROLE_ID_SITE_ADMIN);
 
             if (count($adminGroups)) {
                 $groupUsers = $userGroupDao->getUsersById($adminGroups[0])->toArray();

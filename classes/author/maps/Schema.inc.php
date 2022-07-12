@@ -20,6 +20,7 @@ use PKP\services\PKPSchemaService;
 use PKP\core\PKPRequest;
 use PKP\db\DAORegistry;
 use PKP\security\UserGroupDAO;
+use APP\facades\Repo;
 
 class Schema extends \PKP\core\maps\Schema
 {
@@ -34,7 +35,7 @@ class Schema extends \PKP\core\maps\Schema
         parent::__construct($request, $context, $schemaService);
 
         $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $this->authorUserGroups = $userGroupDao->getByRoleId($this->context->getId(), Role::ROLE_ID_AUTHOR)->toAssociativeArray();
+        $this->authorUserGroups = Repo::userGroup()->getByRoleId(Role::ROLE_ID_AUTHOR, $this->context->getId());
     }
 
     /**
@@ -94,8 +95,8 @@ class Schema extends \PKP\core\maps\Schema
                 case 'userGroupName':
                     $userGroupId = $item->getData('userGroupId');
 
-                    $output[$prop] = isset($this->authorUserGroups[$userGroupId])
-                        ? $this->authorUserGroups[$userGroupId]->getName(null)
+                    $output[$prop] = $this->authorUserGroups->contains('userGroupId', $userGroupId)
+                        ? $this->authorUserGroups->firstWhere('userGroupId', $userGroupId)->getName(null)
                         : '';
 
                     break;

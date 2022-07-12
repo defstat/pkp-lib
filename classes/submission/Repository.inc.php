@@ -30,6 +30,7 @@ use PKP\doi\exceptions\DoiCreationException;
 use PKP\plugins\HookRegistry;
 use PKP\services\PKPSchemaService;
 use PKP\validation\ValidatorFactory;
+use PKP\security\Role;
 
 abstract class Repository
 {
@@ -173,7 +174,7 @@ abstract class Repository
         // Check if the user is an author of this submission
         $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
         $stageAssignmentDao = DAORegistry::getDAO('StageAssignmentDAO'); /** @var StageAssignmentDAO $stageAssignmentDao */
-        $authorUserGroupIds = $userGroupDao->getUserGroupIdsByRoleId(ROLE_ID_AUTHOR);
+        $authorUserGroupIds = Repo::userGroup()->getArrayIdByRoleId(Role::ROLE_ID_AUTHOR); 
         $stageAssignmentsFactory = $stageAssignmentDao->getBySubmissionAndStageId($submission->getId(), null, null, $user->getId());
 
         $authorDashboard = false;

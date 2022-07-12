@@ -78,11 +78,9 @@ class AddParticipantForm extends StageParticipantNotifyForm
      */
     public function initialize()
     {
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-
         // assign all user group IDs with ROLE_ID_MANAGER or ROLE_ID_SUB_EDITOR
-        $this->_managerGroupIds = $userGroupDao->getUserGroupIdsByRoleId(Role::ROLE_ID_MANAGER, $this->_contextId);
-        $subEditorGroupIds = $userGroupDao->getUserGroupIdsByRoleId(Role::ROLE_ID_SUB_EDITOR, $this->_contextId);
+        $this->_managerGroupIds =  Repo::userGroup()->getArrayIdByRoleId(Role::ROLE_ID_MANAGER, $this->_contextId);
+        $subEditorGroupIds = Repo::userGroup()->getArrayIdByRoleId(Role::ROLE_ID_SUB_EDITOR, $this->_contextId);
         $this->_possibleRecommendOnlyUserGroupIds = array_merge($this->_managerGroupIds, $subEditorGroupIds);
     }
 
