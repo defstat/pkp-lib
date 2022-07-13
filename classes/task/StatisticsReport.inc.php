@@ -23,6 +23,7 @@ use PKP\notification\PKPNotification;
 
 use PKP\scheduledTask\ScheduledTask;
 use PKP\security\Role;
+use APP\facades\Repo;
 
 class StatisticsReport extends ScheduledTask
 {
@@ -64,7 +65,8 @@ class StatisticsReport extends ScheduledTask
             );
             $notifiedUsersSet = [];
             foreach ($this->_roleIds as $roleId) {
-                for ($userGroups = $userGroupDao->getByRoleId($context->getId(), $roleId); $userGroup = $userGroups->next();) {
+                $userGroups = Repo::userGroup()->getByRoleIds([$roleId], $context->getId());
+                foreach ($userGroups as $userGroup) {
                     for ($users = $userGroupDao->getUsersById($userGroup->getId(), $context->getId()); $user = $users->next();) {
                         if (isset($notifiedUsersSet[$user->getId()])) {
                             continue;

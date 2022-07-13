@@ -130,18 +130,9 @@ abstract class PKPWorkflowHandler extends Handler
         $workflowRoles = Application::getWorkflowTypeRoles();
         $editorialWorkflowRoles = $workflowRoles[PKPApplication::WORKFLOW_TYPE_EDITORIAL];
 
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $result = $userGroupDao->getByContextId($submission->getData('contextId'));
-        $authorUserGroups = [];
-        $workflowUserGroups = [];
-        while ($userGroup = $result->next()) {
-            if ($userGroup->getRoleId() == Role::ROLE_ID_AUTHOR) {
-                $authorUserGroups[] = $userGroup;
-            }
-            if (in_array((int) $userGroup->getRoleId(), $editorialWorkflowRoles)) {
-                $workflowUserGroups[] = $userGroup;
-            }
-        }
+        $result = Repo::userGroup()->getByContextId($submission->getData('contextId'));
+        $authorUserGroups = Repo::userGroup()->getByRoleIds([Role::ROLE_ID_AUTHOR], $submission->getData('contextId'));
+        $workflowUserGroups = Repo::userGroup()->getByRoleIds($editorialWorkflowRoles, $submission->getData('contextId'));
 
         // Publication tab
         // Users have access to the publication tab if they are assigned to

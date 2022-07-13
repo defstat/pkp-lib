@@ -136,9 +136,8 @@ class ManagementHandler extends Handler
             ]);
 
             // Get contact information for site administrator
-            $userGroupDao = DAORegistry::getDAO('UserGroupDAO');
-            $userGroups = $userGroupDao->getByRoleId(PKPApplication::CONTEXT_SITE, Role::ROLE_ID_SITE_ADMIN);
-            $adminUserGroup = $userGroups->next();
+            $userGroups = Repo::userGroup()->getByRoleIds([Role::ROLE_ID_SITE_ADMIN], PKPApplication::CONTEXT_SITE);
+            $adminUserGroup = $userGroups->first();
 
             $collector = Repo::user()->getCollector();
             $collector->filterByUserGroupIds([$adminUserGroup->getId()]);

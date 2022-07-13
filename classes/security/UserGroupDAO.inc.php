@@ -84,50 +84,6 @@ class UserGroupDAO extends DAO
     }
 
     /**
-     * Get a single default user group with a particular roleId
-     *
-     * @param int $contextId Context ID
-     * @param int $roleId ROLE_ID_...
-     *
-     * @return UserGroup|false
-     */
-    public function getDefaultByRoleId($contextId, $roleId) // INSTALL
-    {
-        $allDefaults = $this->getByRoleId($contextId, $roleId, true);
-        return $allDefaults->next() ?? false;
-    }
-
-    /**
-     * Get all user groups belonging to a role
-     *
-     * @param int $contextId
-     * @param int $roleId
-     * @param bool $default (optional)
-     * @param DBResultRange $dbResultRange (optional)
-     *
-     * @return DAOResultFactory
-     */
-    public function getByRoleId($contextId, $roleId, $default = false, $dbResultRange = null)
-    {
-        $params = [(int) $contextId, (int) $roleId];
-        if ($default) {
-            $params[] = 1;
-        } // true
-        $result = $this->retrieveRange(
-            $sql = 'SELECT *
-            FROM user_groups
-            WHERE context_id = ? AND
-                role_id = ?
-                ' . ($default ? ' AND is_default = ?' : '')
-            . ' ORDER BY user_group_id',
-            $params,
-            $dbResultRange
-        );
-
-        return new DAOResultFactory($result, $this, '_returnFromRow', [], $sql, $params, $dbResultRange);
-    }
-
-    /**
      * Check if a user is in a particular user group
      *
      * @param int $userId

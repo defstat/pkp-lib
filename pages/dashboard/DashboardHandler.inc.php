@@ -101,8 +101,7 @@ class DashboardHandler extends Handler
         $itemsMax = Repo::submission()->getCount($collector);
         $items = Repo::submission()->getMany($collector->limit(30));
 
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $userGroups = $userGroupDao->getByContextId($context->getId())->toArray();
+        $userGroups = Repo::userGroup()->getByContextId($context->getId());
 
         /** @var GenreDAO $genreDao */
         $genreDao = DAORegistry::getDAO('GenreDAO');

@@ -85,8 +85,8 @@ class NativeXmlUserGroupFilter extends NativeImportFilter
         $nodeList = $node->getElementsByTagNameNS($deployment->getNamespace(), 'name');
         if ($nodeList->length > 0) {
             $content = $this->parseLocalizedContent($nodeList->item(0)); // $content[1] contains the localized name.
-            $userGroups = $userGroupDao->getByContextId($context->getId());
-            while ($testGroup = $userGroups->next()) {
+            $userGroups = Repo::userGroup()->getByContextId($context->getId());
+            foreach ($userGroups as $testGroup) {
                 if (in_array($content[1], $testGroup->getName(null))) {
                     return $testGroup;  // we found one with the same name.
                 }

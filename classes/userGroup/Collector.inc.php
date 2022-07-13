@@ -32,7 +32,7 @@ class Collector implements CollectorInterface
     public $contextIds = null; // contextHasGroup, getByContextId, 
 
     /** @var array|null */
-    public $roleIds = null; // getDefaultByRoleId, getByRoleId
+    public $roleIds = null;
 
     /** @var array|null */
     public $stageIds = null; // getUserGroupsByStage
@@ -41,7 +41,7 @@ class Collector implements CollectorInterface
     // ?? deleteAssignmentsByUserId, deleteAssignmentsByUserGroupId, deleteAssignmentsByContextId
 
     /** @var bool|null */
-    public ?bool $isDefault = null; // getDefaultByRoleId
+    public ?bool $isDefault = null;
 
     /** @var bool|null */
     public ?bool $isRecommendOnly = null; // getRecommendOnlyGroupIds

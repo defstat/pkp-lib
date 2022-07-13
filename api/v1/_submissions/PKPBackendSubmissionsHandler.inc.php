@@ -118,8 +118,7 @@ abstract class PKPBackendSubmissionsHandler extends APIHandler
 
         $submissions = Repo::submission()->getMany($collector);
 
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $userGroups = $userGroupDao->getByContextId($context->getId())->toArray();
+        $userGroups =  Repo::userGroup()->getByContextId($context->getId());
 
         /** @var GenreDAO $genreDao */
         $genreDao = DAORegistry::getDAO('GenreDAO');

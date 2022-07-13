@@ -21,6 +21,7 @@ use PKP\core\PKPRequest;
 use PKP\db\DAORegistry;
 use PKP\security\UserGroupDAO;
 use APP\facades\Repo;
+use Illuminate\Support\LazyCollection;
 
 class Schema extends \PKP\core\maps\Schema
 {
@@ -28,14 +29,13 @@ class Schema extends \PKP\core\maps\Schema
 
     public string $schema = PKPSchemaService::SCHEMA_AUTHOR;
 
-    protected array $authorUserGroups = [];
+    protected LazyCollection $authorUserGroups;
 
     public function __construct(PKPRequest $request, \PKP\context\Context $context, PKPSchemaService $schemaService)
     {
         parent::__construct($request, $context, $schemaService);
 
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $this->authorUserGroups = Repo::userGroup()->getByRoleId(Role::ROLE_ID_AUTHOR, $this->context->getId());
+        $this->authorUserGroups = Repo::userGroup()->getByRoleIds([Role::ROLE_ID_AUTHOR], $this->context->getId());
     }
 
     /**

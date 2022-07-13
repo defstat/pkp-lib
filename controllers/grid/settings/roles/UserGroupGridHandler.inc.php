@@ -181,9 +181,9 @@ class UserGroupGridHandler extends GridHandler
         if ($stageIdFilter && $stageIdFilter != 0) {
             return $userGroupDao->getUserGroupsByStage($contextId, $stageIdFilter, $roleIdFilter, $rangeInfo);
         } elseif ($roleIdFilter && $roleIdFilter != 0) {
-            return $userGroupDao->getByRoleId($contextId, $roleIdFilter, false, $rangeInfo);
+            return Repo::userGroup()->getByRoleIds([$roleIdFilter], $contextId);
         } else {
-            return $userGroupDao->getByContextId($contextId, $rangeInfo);
+            return Repo::userGroup()->getByContextId($contextId);
         }
     }
 

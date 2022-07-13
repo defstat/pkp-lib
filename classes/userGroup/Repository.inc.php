@@ -22,7 +22,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
 use PKP\plugins\HookRegistry;
 use PKP\services\PKPSchemaService;
-use PKP\submission\PKPSubmission;
 use PKP\validation\ValidatorFactory;
 
 class Repository
@@ -206,6 +205,19 @@ class Repository
     }
 
     /**
+    * Get all user groups assigned to a certain context by contextId
+    */
+    public function getByContextId(int $contextId)
+    {
+        // I may have to use transactions here
+        $collector = Repo::userGroup()
+            ->getCollector()
+            ->filterByContextIds([$contextId]);
+
+        return Repo::userGroup()->getMany($collector); 
+    }
+
+    /**
     * return all user group ids given a certain role id
     * 
     * @param int $roleId 
@@ -230,79 +242,17 @@ class Repository
     * @param int $contextId 
     * @param bool $default 
     */
-    public function getByRoleId($roleId, $contextId, $default = false) : LazyCollection
+    public function getByRoleIds(array $roleIds, int $contextId, ?bool $default = false) : LazyCollection
     {
         $collector = Repo::userGroup()
             ->getCollector()
-            ->filterByRoleIds([$roleId])
-            ->filterByContextIds([$contextId])
-            ->filterByIsDefault($default);
+            ->filterByRoleIds($roleIds)
+            ->filterByContextIds([$contextId]);
+        
+        if (!is_null($default)) {
+            $collector->filterByIsDefault($default);
+        }
 
         return Repo::userGroup()->getMany($collector);
     }
-
-    // /**
-    //  * Update author names when publication locale changes.
-    //  *
-    //  * @param int $publicationId
-    //  * @param string $oldLocale
-    //  * @param string $newLocale
-    //  */
-    // public function changePublicationLocale($publicationId, $oldLocale, $newLocale)
-    // {
-    //     $authors = $this->getMany(
-    //         $this
-    //             ->getCollector()
-    //             ->filterByPublicationIds([$publicationId])
-    //     );
-
-    //     foreach ($authors as $author) {
-    //         if (empty($author->getGivenName($newLocale))) {
-    //             if (empty($author->getFamilyName($newLocale)) && empty($author->getPreferredPublicName($newLocale))) {
-    //                 // if no name exists for the new locale
-    //                 // copy all names with the old locale to the new locale
-    //                 $author->setGivenName($author->getGivenName($oldLocale), $newLocale);
-    //                 $author->setFamilyName($author->getFamilyName($oldLocale), $newLocale);
-    //                 $author->setPreferredPublicName($author->getPreferredPublicName($oldLocale), $newLocale);
-    //             } else {
-    //                 // if the given name does not exist, but one of the other names do exist
-    //                 // copy only the given name with the old locale to the new locale, because the given name is required
-    //                 $author->setGivenName($author->getGivenName($oldLocale), $newLocale);
-    //             }
-
-    //             $this->dao->update($author);
-    //         }
-    //     }
-    // }
-
-    /**
-    * Returns the authors of a given submission by using the submission's current publication
-    */
-    public function getSubmissionAuthors(Submission $submission, bool $onlyIncludeInBrowse = false): LazyCollection
-    {
-        $publication = $submission->getCurrentPublication();
-
-        return Repo::author()->getMany(
-            Repo::author()
-                ->getCollector()
-                ->filterByIncludeInBrowse($onlyIncludeInBrowse)
-                ->filterByPublicationIds([$publication->getId()])
-                ->orderBy(Repo::author()->getCollector()::ORDERBY_ID)
-        );
-    }
-
-    // /**
-    // * Reorders the authors of a publication according to the given order of the authors in the provided author array
-    // */
-    // public function setAuthorsOrder(int $publicationId, array $authors)
-    // {
-    //     $seq = 0;
-    //     foreach ($authors as $author) {
-    //         $author->setData('seq', $seq);
-
-    //         $this->dao->update($author);
-
-    //         $seq++;
-    //     }
-    // }
 }

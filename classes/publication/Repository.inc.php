@@ -113,7 +113,7 @@ abstract class Repository
      * @param UserGroup[] $userGroups
      * @param Genre[] $genres
      */
-    public function getSchemaMap(Submission $submission, array $userGroups, array $genres): maps\Schema
+    public function getSchemaMap(Submission $submission, LazyCollection $userGroups, array $genres): maps\Schema
     {
         return app('maps')->withExtensions(
             $this->schemaMap,

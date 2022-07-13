@@ -162,8 +162,7 @@ class PKPUserUserXmlFilter extends NativeExportFilter
         $context = $deployment->getContext();
         $userGroupsNode = $doc->createElementNS($deployment->getNamespace(), 'user_groups');
 
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $userGroups = $userGroupDao->getByContextId($context->getId());
+        $userGroups = Repo::userGroup()->getByContextId($context->getId());
         $filterDao = DAORegistry::getDAO('FilterDAO'); /** @var FilterDAO $filterDao */
         $userGroupExportFilters = $filterDao->getObjectsByGroup('usergroup=>user-xml');
         assert(count($userGroupExportFilters) == 1); // Assert only a single serialization filter

@@ -1108,7 +1108,8 @@ class Installer
         $notificationSubscriptionSettingsDao = DAORegistry::getDAO('NotificationSubscriptionSettingsDAO'); /** @var NotificationSubscriptionSettingsDAO $notificationSubscriptionSettingsDao */
         for ($contexts = Application::get()->getContextDAO()->getAll(true); $context = $contexts->next();) {
             foreach ($roleIds as $roleId) {
-                for ($userGroups = $userGroupDao->getByRoleId($context->getId(), $roleId); $userGroup = $userGroups->next();) {
+                $userGroups = Repo::userGroup()->getByRoleIds([$roleId], $context->getId());
+                foreach ($userGroups as $userGroup) {
                     for ($users = $userGroupDao->getUsersById($userGroup->getId(), $context->getId()); $user = $users->next();) {
                         $notificationSubscriptionSettingsDao->update(
                             'INSERT INTO notification_subscription_settings

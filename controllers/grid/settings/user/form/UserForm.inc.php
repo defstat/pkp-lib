@@ -16,6 +16,7 @@
 use APP\template\TemplateManager;
 
 use PKP\form\Form;
+use APP\facades\Repo;
 
 class UserForm extends Form
 {
@@ -76,9 +77,9 @@ class UserForm extends Form
         $templateMgr = TemplateManager::getManager($request);
 
         $allUserGroups = [];
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $userGroups = $userGroupDao->getByContextId($contextId);
-        while ($userGroup = $userGroups->next()) {
+
+        $userGroups = Repo::userGroup()->getByContextId($contextId);
+        foreach ($userGroups as $userGroup) {
             $allUserGroups[(int) $userGroup->getId()] = $userGroup->getLocalizedName();
         }
 

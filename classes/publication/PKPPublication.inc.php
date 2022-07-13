@@ -21,6 +21,7 @@ use PKP\facades\Locale;
 
 use PKP\core\Core;
 use PKP\core\PKPString;
+use Illuminate\Support\LazyCollection;
 
 class PKPPublication extends \PKP\core\DataObject
 {
@@ -149,7 +150,7 @@ class PKPPublication extends \PKP\core\DataObject
      *
      * @return string
      */
-    public function getAuthorString($userGroups, $includeInBrowseOnly = false)
+    public function getAuthorString(LazyCollection $userGroups, $includeInBrowseOnly = false)
     {
         $authors = $this->getData('authors');
 

@@ -140,7 +140,7 @@ class PKPSubmissionSubmitStep1Form extends SubmissionSubmitForm
         }
 
         // Set default group to default author group
-        $defaultGroup = $userGroupDao->getDefaultByRoleId($this->context->getId(), Role::ROLE_ID_AUTHOR);
+        $defaultGroup = Repo::userGroup()->getByRoleIds([Role::ROLE_ID_AUTHOR], $this->context->getId(), true)->toArray();
         $noExistingRoles = false;
         $managerGroups = false;
 
@@ -154,7 +154,7 @@ class PKPSubmissionSubmitStep1Form extends SubmissionSubmitForm
             $userGroupNames = array_replace($userGroupNames, $availableUserGroupNames);
 
             // Set default group to default manager group
-            $defaultGroup = $userGroupDao->getDefaultByRoleId($this->context->getId(), Role::ROLE_ID_MANAGER);
+            $defaultGroup = Repo::userGroup()->getByRoleIds([Role::ROLE_ID_MANAGER], $this->context->getId(), true)->toArray();
 
         // else if the user only has existing author roles, add to selection
         } elseif (!empty($authorUserGroupAssignments)) {
@@ -415,13 +415,11 @@ class PKPSubmissionSubmitStep1Form extends SubmissionSubmitForm
 
             // if no user names exist for this submission locale,
             // copy the names in default site primary locale for this locale as well
-            $authorUserGroups = $userGroupDao->getByRoleId($this->context->getId(), Role::ROLE_ID_AUTHOR)->toArray();
+            $authorUserGroups =  Repo::userGroup()
+                ->getByRoleIds([Role::ROLE_ID_AUTHOR], $this->context->getId())
+                ->where('id', $userGroupId);
 
-            $userInAuthorGroup = array_filter($authorUserGroups, function ($item) use ($userGroupId) {
-                return $item->getId() === $userGroupId;
-            });
-
-            if (!empty($userInAuthorGroup)) {
+            if ($authorUserGroups->count()) {
                 $userGivenNames = $user->getGivenName(null);
                 $userFamilyNames = $user->getFamilyName(null);
                 if (is_null($userFamilyNames)) {

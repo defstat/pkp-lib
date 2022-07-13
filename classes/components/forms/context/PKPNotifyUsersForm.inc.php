@@ -20,6 +20,7 @@ use PKP\components\forms\FieldRichTextarea;
 use PKP\components\forms\FieldText;
 use PKP\components\forms\FormComponent;
 use PKP\db\DAORegistry;
+use APP\facades\Repo;
 
 define('FORM_NOTIFY_USERS', 'notifyUsers');
 
@@ -47,11 +48,11 @@ class PKPNotifyUsersForm extends FormComponent
         $this->action = $action;
         /** @var \PKP\security\UserGroupDAO */
         $userGroupDao = DAORegistry::getDAO('UserGroupDAO');
-        $userGroups = $userGroupDao->getByContextId($context->getId());
+        $userGroups = Repo::userGroup()->getByContextId($context->getId());
         $userCountByGroupId = $userGroupDao->getUserCountByContextId($context->getId());
 
         $userGroupOptions = [];
-        while ($userGroup = $userGroups->next()) {
+        foreach ($userGroups as $userGroup) {
             if (in_array($userGroup->getId(), (array) $context->getData('disableBulkEmailUserGroups'))) {
                 continue;
             }

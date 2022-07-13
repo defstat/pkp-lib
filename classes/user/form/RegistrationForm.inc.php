@@ -283,7 +283,7 @@ class RegistrationForm extends Form
         // Save the selected roles or assign the Reader role if none selected
         if ($request->getContext() && !$this->getData('reviewerGroup')) {
             $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-            $defaultReaderGroup = $userGroupDao->getDefaultByRoleId($request->getContext()->getId(), Role::ROLE_ID_READER);
+            $defaultReaderGroup = Repo::userGroup()->getByRoleIds([Role::ROLE_ID_READER], $request->getContext()->getId(), true)->first();
             if ($defaultReaderGroup) {
                 $userGroupDao->assignUserToGroup($user->getId(), $defaultReaderGroup->getId(), $request->getContext()->getId());
             }

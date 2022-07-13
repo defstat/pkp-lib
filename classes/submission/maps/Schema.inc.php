@@ -31,6 +31,7 @@ use PKP\submission\Genre;
 use PKP\submission\reviewAssignment\ReviewAssignment;
 use PKP\submission\reviewRound\ReviewRoundDAO;
 use PKP\submissionFile\SubmissionFile;
+use Illuminate\Support\LazyCollection;
 
 class Schema extends \PKP\core\maps\Schema
 {
@@ -40,8 +41,8 @@ class Schema extends \PKP\core\maps\Schema
     /** @copydoc \PKP\core\maps\Schema::$schema */
     public string $schema = PKPSchemaService::SCHEMA_SUBMISSION;
 
-    /** @var UserGroup[] The user groups for this context. */
-    public array $userGroups;
+    /** @var LazyCollection The user groups for this context. */
+    public LazyCollection $userGroups;
 
     /** @var Genre[] The file genres in this context. */
     public array $genres;
@@ -88,7 +89,7 @@ class Schema extends \PKP\core\maps\Schema
      * @param UserGroup[] $userGroups The user groups in this context
      * @param Genre[] $genres The file genres in this context
      */
-    public function map(Submission $item, array $userGroups, array $genres): array
+    public function map(Submission $item, LazyCollection $userGroups, array $genres): array
     {
         $this->userGroups = $userGroups;
         $this->genres = $genres;
@@ -103,7 +104,7 @@ class Schema extends \PKP\core\maps\Schema
      * @param UserGroup[] $userGroups The user groups in this context
      * @param Genre[] $genres The file genres in this context
      */
-    public function summarize(Submission $item, array $userGroups, array $genres): array
+    public function summarize(Submission $item, LazyCollection $userGroups, array $genres): array
     {
         $this->userGroups = $userGroups;
         $this->genres = $genres;
@@ -118,7 +119,7 @@ class Schema extends \PKP\core\maps\Schema
      * @param UserGroup[] $userGroups The user groups in this context
      * @param Genre[] $genres The file genres in this context
      */
-    public function mapMany(Enumerable $collection, array $userGroups, array $genres): Enumerable
+    public function mapMany(Enumerable $collection, LazyCollection $userGroups, array $genres): Enumerable
     {
         $this->collection = $collection;
         $this->userGroups = $userGroups;
@@ -133,10 +134,10 @@ class Schema extends \PKP\core\maps\Schema
      *
      * @see self::summarize
      *
-     * @param UserGroup[] $userGroups The user groups in this context
+     * @param LazyCollection $userGroups The user groups in this context
      * @param Genre[] $genres The file genres in this context
      */
-    public function summarizeMany(Enumerable $collection, array $userGroups, array $genres): Enumerable
+    public function summarizeMany(Enumerable $collection, LazyCollection $userGroups, array $genres): Enumerable
     {
         $this->collection = $collection;
         $this->userGroups = $userGroups;
@@ -149,10 +150,10 @@ class Schema extends \PKP\core\maps\Schema
     /**
      * Map a submission with extra properties for the submissions list
      *
-     * @param UserGroup[] $userGroups The user groups in this context
+     * @param LazyCollection $userGroups The user groups in this context
      * @param Genre[] $genres The file genres in this context
      */
-    public function mapToSubmissionsList(Submission $item, array $userGroups, array $genres): array
+    public function mapToSubmissionsList(Submission $item, LazyCollection $userGroups, array $genres): array
     {
         $this->userGroups = $userGroups;
         $this->genres = $genres;
@@ -164,10 +165,10 @@ class Schema extends \PKP\core\maps\Schema
      *
      * @see self::map
      *
-     * @param UserGroup[] $userGroups The user groups in this context
+     * @param LazyCollection $userGroups The user groups in this context
      * @param Genre[] $genres The file genres in this context
      */
-    public function mapManyToSubmissionsList(Enumerable $collection, array $userGroups, array $genres): Enumerable
+    public function mapManyToSubmissionsList(Enumerable $collection, LazyCollection $userGroups, array $genres): Enumerable
     {
         $this->collection = $collection;
         $this->userGroups = $userGroups;
