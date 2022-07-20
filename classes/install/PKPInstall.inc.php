@@ -238,8 +238,7 @@ class PKPInstall extends Installer
         Repo::userGroup()->add($adminUserGroup);
 
         // Put the installer into this user group
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO');
-        $userGroupDao->assignUserToGroup($user->getId(), $adminUserGroup->getId());
+        Repo::userGroup()->assignUserToGroup($user->getId(), $adminUserGroup->getId());
 
         // Add initial site data
         $siteDao = DAORegistry::getDAO('SiteDAO');

@@ -28,6 +28,7 @@ use PKP\security\Role;
 
 use PKP\workflow\WorkflowStageDAO;
 use APP\facades\Repo;
+use PKP\userGroup\relationships\UserGroupStage;
 
 class UserGroupGridHandler extends GridHandler
 {
@@ -159,7 +160,6 @@ class UserGroupGridHandler extends GridHandler
     protected function loadData($request, $filter)
     {
         $contextId = $this->_getContextId();
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
 
         $roleIdFilter = null;
         $stageIdFilter = null;
@@ -179,11 +179,18 @@ class UserGroupGridHandler extends GridHandler
         $rangeInfo = $this->getGridRangeInfo($request, $this->getId());
 
         if ($stageIdFilter && $stageIdFilter != 0) {
-            return $userGroupDao->getUserGroupsByStage($contextId, $stageIdFilter, $roleIdFilter, $rangeInfo);
+            $userGroups = Repo::userGroup()->getCollector()
+                ->filterByContextIds([$contextId])
+                ->filterByStageIds([$stageIdFilter])
+                ->filterByRoleIds([$roleIdFilter])
+                ->limit($rangeInfo->getCount())
+                ->offset($rangeInfo->getOffset() + max(0, $rangeInfo->getPage() - 1) * $rangeInfo->getCount()); //Should that be coded inside the Collector somehow?
+            
+            return Repo::userGroup()->getMany($userGroups)->toArray();
         } elseif ($roleIdFilter && $roleIdFilter != 0) {
-            return Repo::userGroup()->getByRoleIds([$roleIdFilter], $contextId);
+            return Repo::userGroup()->getByRoleIds([$roleIdFilter], $contextId)->toArray();
         } else {
-            return Repo::userGroup()->getByContextId($contextId);
+            return Repo::userGroup()->getByContextId($contextId)->toArray();
         }
     }
 
@@ -328,10 +335,13 @@ class UserGroupGridHandler extends GridHandler
         $user = $request->getUser();
         $userGroup = $this->_userGroup;
         $contextId = $this->_getContextId();
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
         $notificationMgr = new NotificationManager();
 
-        $usersAssignedToUserGroupCount = $userGroupDao->getContextUsersCount($contextId, $userGroup->getId());
+        $userCollector = Repo::user()->getCollector()
+            ->filterByContextIds([$contextId])
+            ->filterByUserGroupIds([$userGroup->getId()]);
+
+        $usersAssignedToUserGroupCount = Repo::user()->getCount($userCollector);
         if ($usersAssignedToUserGroupCount == 0) {
             if ($userGroup->getData('isDefault')) {
                 // Can't delete default user groups.
@@ -418,15 +428,18 @@ class UserGroupGridHandler extends GridHandler
         $contextId = $this->_getContextId();
         $operation = $request->getRequestedOp();
 
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-
         switch ($operation) {
             case 'assignStage':
-                $userGroupDao->assignGroupToStage($contextId, $userGroup->getId(), $stageId);
+                UserGroupStage::create([
+                    'contextId' => $contextId,
+                    'userGroupId' => $userGroup->getId(),
+                    'stageId' => $stageId
+                ]);
+                
                 $messageKey = 'grid.userGroup.assignedStage';
                 break;
             case 'unassignStage':
-                $userGroupDao->removeGroupFromStage($contextId, $userGroup->getId(), $stageId);
+                Repo::userGroup()->removeGroupFromStage($contextId, $userGroup->getId(), $stageId);
                 $messageKey = 'grid.userGroup.unassignedStage';
                 break;
         }

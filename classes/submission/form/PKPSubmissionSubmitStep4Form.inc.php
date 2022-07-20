@@ -24,6 +24,7 @@ use PKP\core\Core;
 use PKP\db\DAORegistry;
 use PKP\notification\PKPNotification;
 use PKP\security\Role;
+use PKP\userGroup\relationships\UserGroupStage;
 
 class PKPSubmissionSubmitStep4Form extends SubmissionSubmitForm
 {
@@ -73,8 +74,12 @@ class PKPSubmissionSubmitStep4Form extends SubmissionSubmitForm
         //  stage in setup, iff there is only one user for the group,
         //  automatically assign the user to the stage.
         $stageAssignmentDao = DAORegistry::getDAO('StageAssignmentDAO'); /** @var StageAssignmentDAO $stageAssignmentDao */
-        $submissionStageGroups = $userGroupDao->getUserGroupsByStage($this->submission->getContextId(), WORKFLOW_STAGE_ID_SUBMISSION);
-        while ($userGroup = $submissionStageGroups->next()) {
+        $submissionStageGroups = Repo::userGroup()->getUserGroupsByStage(
+            $this->submission->getContextId(), 
+            WORKFLOW_STAGE_ID_SUBMISSION
+        );
+
+        foreach ($submissionStageGroups as $userGroup) {
             // Only handle manager and assistant roles
             if (!in_array($userGroup->getRoleId(), [Role::ROLE_ID_MANAGER, Role::ROLE_ID_ASSISTANT])) {
                 continue;
@@ -115,7 +120,7 @@ class PKPSubmissionSubmitStep4Form extends SubmissionSubmitForm
                 }
                 $stageAssignmentDao->build($this->submission->getId(), $userGroup->getId(), $subEditor->getId(), $userGroup->getRecommendOnly());
                 // If we assign a stage assignment in the Submission stage to a sub editor, make note.
-                if ($userGroupDao->userGroupAssignedToStage($userGroup->getId(), WORKFLOW_STAGE_ID_SUBMISSION)) {
+                if (UserGroupStage::withStageId(WORKFLOW_STAGE_ID_SUBMISSION)->withUserGroupId($userGroup->getId())->get()->isNotEmpty()) {
                     $notifyUsers[] = $subEditor->getId();
                 }
             }
@@ -137,7 +142,7 @@ class PKPSubmissionSubmitStep4Form extends SubmissionSubmitForm
                     }
                     $stageAssignmentDao->build($this->submission->getId(), $userGroup->getId(), $subEditor->getId(), $userGroup->getRecommendOnly());
                     // If we assign a stage assignment in the Submission stage to a sub editor, make note.
-                    if ($userGroupDao->userGroupAssignedToStage($userGroup->getId(), WORKFLOW_STAGE_ID_SUBMISSION)) {
+                    if (UserGroupStage::withStageId(WORKFLOW_STAGE_ID_SUBMISSION)->withUserGroupId($userGroup->getId())->get()->isNotEmpty()) {
                         $notifyUsers[] = $subEditor->getId();
                     }
                 }

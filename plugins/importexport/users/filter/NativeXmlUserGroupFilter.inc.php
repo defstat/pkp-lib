@@ -1,5 +1,6 @@
 <?php
 use APP\facades\Repo;
+use PKP\userGroup\relationships\UserGroupStage;
 
 /**
  * @file plugins/importexport/users/filter/NativeXmlUserGroupFilter.inc.php
@@ -77,7 +78,6 @@ class NativeXmlUserGroupFilter extends NativeImportFilter
         $context = $deployment->getContext();
 
         // Create the UserGroup object.
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
         $userGroup = Repo::userGroup()->newDataObject();
         $userGroup->setContextId($context->getId());
 
@@ -114,7 +114,11 @@ class NativeXmlUserGroupFilter extends NativeImportFilter
                 $assignedStages = preg_split('/:/', $n->textContent);
                 foreach ($assignedStages as $stage) {
                     if ($stage >= WORKFLOW_STAGE_ID_SUBMISSION && $stage <= WORKFLOW_STAGE_ID_PRODUCTION) {
-                        $userGroupDao->assignGroupToStage($context->getId(), $userGroupId, $stage);
+                        UserGroupStage::create([
+                            'contextId' => $context->getId(),
+                            'userGroupId' => $userGroupId,
+                            'stageId' => $stage
+                        ]);
                     }
                 }
             }

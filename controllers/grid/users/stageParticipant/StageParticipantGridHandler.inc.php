@@ -268,14 +268,12 @@ class StageParticipantGridHandler extends CategoryGridHandler
         }
 
         // Fetch the desired user groups as objects.
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $context = $request->getContext();
         $result = [];
-        $userGroups = $userGroupDao->getUserGroupsByStage(
+        $userGroups = Repo::userGroup()->getUserGroupsByStage(
             $request->getContext()->getId(),
             $this->getStageId()
         );
-        while ($userGroup = $userGroups->next()) {
+        foreach ($userGroups as $userGroup) {
             if ($userGroup->getRoleId() == Role::ROLE_ID_REVIEWER) {
                 continue;
             }

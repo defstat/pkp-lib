@@ -139,13 +139,14 @@ class PKPUserUserXmlFilter extends NativeExportFilter
             $this->createOptionalNode($doc, $userNode, 'disabled_reason', $user->getDisabledReason());
         }
 
-        $userGroupAssignmentDao = DAORegistry::getDAO('UserGroupAssignmentDAO'); /** @var UserGroupAssignmentDAO $userGroupAssignmentDao */
-        $assignedGroups = $userGroupAssignmentDao->getByUserId($user->getId(), $context->getId());
-        while ($assignedGroup = $assignedGroups->next()) {
-            $userGroup = Repo::userGroup()->get($assignedGroup->getUserGroupId());
-            if ($userGroup) {
-                $userNode->appendChild($doc->createElementNS($deployment->getNamespace(), 'user_group_ref', htmlspecialchars($userGroup->getName($context->getPrimaryLocale()), ENT_COMPAT, 'UTF-8')));
-            }
+        $userGroups = Repo::userGroup()->getMany(
+            Repo::userGroup()->getCollector()
+                ->filterByUserIds([$user->getId()])
+                ->filterByContextIds([$context->getId()])
+        );
+
+        foreach ($userGroups as $userGroup) {
+            $userNode->appendChild($doc->createElementNS($deployment->getNamespace(), 'user_group_ref', htmlspecialchars($userGroup->getName($context->getPrimaryLocale()), ENT_COMPAT, 'UTF-8')));
         }
 
         // Add Reviewing Interests, if any.

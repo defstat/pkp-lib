@@ -24,6 +24,8 @@ use PKP\plugins\HookRegistry;
 use PKP\services\PKPSchemaService;
 use PKP\validation\ValidatorFactory;
 use PKP\userGroup\relationships\UserUserGroup;
+use PKP\userGroup\relationships\UserGroupStage;
+use PKP\workflow\WorkflowStageDAO;
 
 class Repository
 {
@@ -262,7 +264,6 @@ class Repository
     */
     public function userUserGroups(int $userId, ?int $contextId = null) : LazyCollection
     {
-
         $collector = Repo::userGroup()
             ->getCollector()
             ->filterByUserIds([$userId]);
@@ -279,15 +280,17 @@ class Repository
     */
     public function userInGroup(int $userId, int $userGroupId) : bool
     {
-        
+        return UserUserGroup::withUserId($userId)
+            ->withUserGroupId($userGroupId)
+            ->get()
+            ->isNotEmpty();
+        // $collector = Repo::userGroup()
+        //     ->getCollector()
+        //     ->filterByUserIds([$userId]);
 
-        $collector = Repo::userGroup()
-            ->getCollector()
-            ->filterByUserIds([$userId]);
+        // $userGroups = $this->getMany($collector);
 
-        $userGroups = $this->getMany($collector);
-
-        return $userGroups->where('id', $userGroupId)->count();
+        // return $userGroups->where('id', $userGroupId)->count();
     }
 
     /**
@@ -304,13 +307,35 @@ class Repository
         return $userGroups->where('id', $userGroupId)->count();
     }
 
+    public function assignUserToGroup(int $userId, int $userGroupId) : bool
+    {
+        return UserUserGroup::create([
+            'userId' => $userId,
+            'userGroupId' => $userGroupId
+        ]);
+
+        // $newUserUserGroup = new UserUserGroup;
+
+        // $newUserUserGroup->userId = $userId;
+        // $newUserUserGroup->userGrouId = $userGroupId;
+
+        // return $newUserUserGroup->save();
+    }
+
+    public function removeUserFromGroup($userId, $userGroupId, $contextId) : bool
+    {
+        return UserUserGroup::withUserId($userId)
+            ->withUserGroupId($userGroupId)
+            ->withContextId($contextId)
+            ->delete();
+    }
 
     public function deleteAssignmentsByUserId(int $userId, ?int $userGroupId = null) : bool
     {
         $query = UserUserGroup::withUserId($userId);
 
         if ($userGroupId) {
-            $query::withUserGroupId($userGroupId);
+            $query->withUserGroupId($userGroupId);
         }
 
         return $query->delete();
@@ -318,15 +343,59 @@ class Repository
 
     public function deleteAssignmentsByContextId(int $contextId, ?int $userId = null) : bool
     {
-        $userUserGroups = UserUserGroup::whereHas("userGroup", function($subQuery) {
-            $subQuery->where("userGroup.contextId", "=", $contextId);
-        });
+        $userUserGroups = UserUserGroup::withContextId($contextId);
 
         if ($userId) {
-            $userUserGroups::withUserId($userId);
+            $userUserGroups->withUserId($userId);
         }
         
-
         return $userUserGroups->delete();
+    }
+
+    /**
+    * Get the user groups assigned to each stage.
+    * 
+    * @return LazyCollection<UserGroup>
+    */
+    public function getUserGroupsByStage($contextId, $stageId, $roleId = null, $count = null) : LazyCollection
+    {
+        $userGroups = $this->getCollector()
+            ->filterByContextIds([$contextId])
+            ->filterByStageIds([$stageId]);
+        
+        if ($roleId) {
+            $userGroups->filterByRoleIds([$roleId]);
+        }
+
+        $userGroups->orderBy(Collector::ORDERBY_ROLE_ID);
+
+        return Repo::userGroup()->getMany($userGroups);
+    }
+
+    /**
+    * Remove a user group from a stage
+    */
+    public function removeGroupFromStage(int $contextId, int $userGroupId, int $stageId) : bool
+    {
+        return UserGroupStage::withContextId($contextId)
+            ->withUserGroupId($userGroupId)
+            ->withStageId($stageId)
+            ->delete();
+    }
+
+    /**
+     * Get all stages assigned to one user group in one context.
+     *
+     * @param int $contextId The context ID.
+     * @param int $userGroupId The user group ID
+     *
+     * @return array
+     */
+    public function getAssignedStagesByUserGroupId(int $contextId, int $userGroupId) : array
+    {
+        return UserGroupStage::withContextId($contextId)
+            ->withUserGroupId($userGroupId)
+            ->pluck('stage_id')
+            ->toArray();
     }
 }

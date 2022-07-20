@@ -25,7 +25,7 @@ use APP\facades\Repo;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Builder;
 
-class UserUserGroup extends \Illuminate\Database\Eloquent\Model
+class UserGroupStage extends \Illuminate\Database\Eloquent\Model
 {
     //
     // The following attributes configure Eloquent's expectations for this model
@@ -33,19 +33,14 @@ class UserUserGroup extends \Illuminate\Database\Eloquent\Model
     public $timestamps = false;
     public $incrementing = false;
     protected $primaryKey = null;
-    protected $fillable = ['userGroupId', 'userId'];
+    protected $fillable = ['userGroupId', 'stageId', 'contextId'];
 
-    //
-    // The following two functions allow callers to get User and UserGroup objects from this model by
-    // accessing the ->user and ->userGroup attributes
-    //
-    public function user(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value, $attributes) => Repo::user()->get($attributes['user_id']),
-            set: fn($value) => $value->getId()
-        );
-    }
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'user_group_stage';
 
     public function userGroup(): Attribute
     {
@@ -59,11 +54,11 @@ class UserUserGroup extends \Illuminate\Database\Eloquent\Model
     // The following two functions permit lowerCamelCase accessors in place of snake_case column names
     // (e.g. $userUserGroup->userGroupId rather than $userUserGroup->user_group_id)
     //
-    public function userId(): Attribute
+    public function stageId(): Attribute
     {
         return Attribute::make(
-            get: fn($user, $attributes) => $attributes['user_id'],
-            set: fn($value) => ['user_id' => $value]
+            get: fn($value, $attributes) => $attributes['stage_id'],
+            set: fn($value) => ['stage_id' => $value]
         );
     }
 
@@ -75,13 +70,21 @@ class UserUserGroup extends \Illuminate\Database\Eloquent\Model
         );
     }
 
+    public function contextId(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value, $attributes) => $attributes['context_id'],
+            set: fn($value) => ['context_id' => $value]
+        );
+    }
+
     //
     // The following two functions allow for queries to be executed that don't require the database column
     // names to be exposed in calling code (as ->where would do). Called e.g.: UserUserGroup::withUserId(123)
     //
-    public function scopeWithUserId(Builder $query, int $userId): Builder
+    public function scopeWithStageId(Builder $query, int $stageId): Builder
     {
-        return $query->where('user_id', $userId);
+        return $query->where('stage_id', $stageId);
     }
 
     public function scopeWithUserGroupId(Builder $query, int $userGroupId): Builder
@@ -91,8 +94,6 @@ class UserUserGroup extends \Illuminate\Database\Eloquent\Model
 
     public function scopeWithContextId(Builder $query, int $contextId): Builder
     {
-        return $query
-            ->join('user_groups as ug', 'user_user_groups.user_group_id', '=', 'ug.user_group_id')
-            ->where('ug.context_id', $contextId);
+        return $query->where('context_id', $contextId);
     }
 }

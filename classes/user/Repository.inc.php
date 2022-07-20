@@ -353,11 +353,10 @@ class Repository
         $subEditorsDao->deleteByUserId($oldUserId);
 
         // Transfer old user's roles
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
         $userGroups = Repo::userGroup()->userUserGroups($oldUserId);
         foreach ($userGroups as $userGroup) {
             if (!Repo::userGroup()->userInGroup($newUserId, $userGroup->getId())) {
-                $userGroupDao->assignUserToGroup($newUserId, $userGroup->getId());
+                Repo::userGroup()->assignUserToGroup($newUserId, $userGroup->getId());
             }
         }
         

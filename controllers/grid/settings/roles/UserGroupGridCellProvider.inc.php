@@ -18,6 +18,7 @@ use PKP\controllers\grid\GridColumn;
 use PKP\controllers\grid\GridHandler;
 use PKP\linkAction\LinkAction;
 use PKP\linkAction\request\AjaxAction;
+use APP\facades\Repo;
 
 class UserGroupGridCellProvider extends GridCellProvider
 {
@@ -36,8 +37,8 @@ class UserGroupGridCellProvider extends GridCellProvider
         $columnId = $column->getId();
         $workflowStages = Application::getApplicationStages();
         $roleDao = DAORegistry::getDAO('RoleDAO'); /** @var RoleDAO $roleDao */
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $assignedStages = $userGroupDao->getAssignedStagesByUserGroupId($userGroup->getContextId(), $userGroup->getId());
+
+        $assignedStages = Repo::userGroup()->getAssignedStagesByUserGroupId($userGroup->getContextId(), $userGroup->getId());
 
         switch ($columnId) {
             case 'name':
@@ -54,7 +55,7 @@ class UserGroupGridCellProvider extends GridCellProvider
                     $selectDisabled = true;
                 }
 
-                return ['selected' => in_array($columnId, array_keys($assignedStages)),
+                return ['selected' => in_array($columnId, $assignedStages),
                     'disabled' => $selectDisabled];
             default:
                 break;
@@ -73,14 +74,14 @@ class UserGroupGridCellProvider extends GridCellProvider
 
         if (in_array($columnId, $workflowStages)) {
             $userGroup = $row->getData(); /** @var UserGroup $userGroup */
-            $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-            $assignedStages = $userGroupDao->getAssignedStagesByUserGroupId($userGroup->getContextId(), $userGroup->getId());
+
+            $assignedStages =  Repo::userGroup()->getAssignedStagesByUserGroupId($userGroup->getContextId(), $userGroup->getId());
 
             $router = $request->getRouter();
             $roleDao = DAORegistry::getDAO('RoleDAO'); /** @var RoleDAO $roleDao */
 
             if (!in_array($columnId, $roleDao->getForbiddenStages($userGroup->getRoleId()))) {
-                if (in_array($columnId, array_keys($assignedStages))) {
+                if (in_array($columnId, $assignedStages)) {
                     $operation = 'unassignStage';
                     $actionTitleKey = 'grid.userGroup.unassignStage';
                 } else {

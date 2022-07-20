@@ -1,4 +1,5 @@
 <?php
+use APP\facades\Repo;
 
 /**
  * @file plugins/importexport/users/filter/UserGroupNativeXmlFilter.inc.php
@@ -99,9 +100,8 @@ class UserGroupNativeXmlFilter extends NativeExportFilter
         $this->createLocalizedNodes($doc, $userGroupNode, 'name', $userGroup->getName(null));
         $this->createLocalizedNodes($doc, $userGroupNode, 'abbrev', $userGroup->getAbbrev(null));
 
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $assignedStages = $userGroupDao->getAssignedStagesByUserGroupId($context->getId(), $userGroup->getId());
-        $userGroupNode->appendChild($doc->createElementNS($deployment->getNamespace(), 'stage_assignments', htmlspecialchars(join(':', array_keys($assignedStages)), ENT_COMPAT, 'UTF-8')));
+        $assignedStages = Repo::userGroup()->getAssignedStagesByUserGroupId($context->getId(), $userGroup->getId());
+        $userGroupNode->appendChild($doc->createElementNS($deployment->getNamespace(), 'stage_assignments', htmlspecialchars(join(':', $assignedStages), ENT_COMPAT, 'UTF-8')));
         return $userGroupNode;
     }
 }

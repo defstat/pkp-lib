@@ -513,7 +513,7 @@ abstract class PKPContextService implements EntityPropertyInterface, EntityReadI
         $userGroupDao->installSettings($context->getId(), 'registry/userGroups.xml');
 
         $managerUserGroup = Repo::userGroup()->getByRoleIds([Role::ROLE_ID_MANAGER], $context->getId(), true)->firstOrFail();
-        $userGroupDao->assignUserToGroup($currentUser->getId(), $managerUserGroup->getId());
+        Repo::userGroup()->assignUserToGroup($currentUser->getId(), $managerUserGroup->getId());
 
         $fileManager = new FileManager();
         foreach ($this->installFileDirs as $dir) {

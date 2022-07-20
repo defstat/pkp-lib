@@ -44,14 +44,17 @@ class UserForm extends Form
      */
     public function initData()
     {   
+        $userGroupIds = [];
+        
         if (!is_null($this->userId)) {
             $userGroups = Repo::userGroup()->userUserGroups($this->userId);
-            $userGroupIds = [];
+            
             foreach($userGroups as $userGroup) {
                 $userGroupIds[] = $userGroup->getId();
             }
-            $this->setData('userGroupIds', $userGroupIds);
         }
+
+        $this->setData('userGroupIds', $userGroupIds);
         
 
         parent::initData();
@@ -102,9 +105,8 @@ class UserForm extends Form
             Repo::userGroup()->deleteAssignmentsByContextId(Application::get()->getRequest()->getContext()->getId(), $this->userId);
 
             if ($this->getData('userGroupIds')) {
-                $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
                 foreach ($this->getData('userGroupIds') as $userGroupId) {
-                    $userGroupDao->assignUserToGroup($this->userId, $userGroupId);
+                    Repo::userGroup()->assignUserToGroup($this->userId, $userGroupId);
                 }
             }
         }

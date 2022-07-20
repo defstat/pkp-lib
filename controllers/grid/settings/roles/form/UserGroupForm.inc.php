@@ -21,6 +21,7 @@ use PKP\facades\Locale;
 use PKP\security\Role;
 use PKP\workflow\WorkflowStageDAO;
 use APP\facades\Repo;
+use PKP\userGroup\relationships\UserGroupStage;
 
 class UserGroupForm extends Form
 {
@@ -92,7 +93,6 @@ class UserGroupForm extends Form
      */
     public function initData()
     {
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
         $userGroup = Repo::userGroup()->get($this->getUserGroupId());
         $stages = WorkflowStageDAO::getWorkflowStageTranslationKeys();
         $this->setData('stages', $stages);
@@ -104,14 +104,14 @@ class UserGroupForm extends Form
         $this->setData('roleForbiddenStagesJSON', $jsonMessage->getString());
 
         if ($userGroup) {
-            $assignedStages = $userGroupDao->getAssignedStagesByUserGroupId($this->getContextId(), $userGroup->getId());
+            $assignedStages = Repo::userGroup()->getAssignedStagesByUserGroupId($this->getContextId(), $userGroup->getId());
 
             $data = [
                 'userGroupId' => $userGroup->getId(),
                 'roleId' => $userGroup->getRoleId(),
                 'name' => $userGroup->getName(null), //Localized
                 'abbrev' => $userGroup->getAbbrev(null), //Localized
-                'assignedStages' => array_keys($assignedStages),
+                'assignedStages' => $assignedStages,
                 'showTitle' => $userGroup->getShowTitle(),
                 'permitSelfRegistration' => $userGroup->getPermitSelfRegistration(),
                 'permitMetadataEdit' => $userGroup->getPermitMetadataEdit(),
@@ -253,13 +253,12 @@ class UserGroupForm extends Form
     public function _assignStagesToUserGroup($userGroupId, $userAssignedStages)
     {
         $contextId = $this->getContextId();
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
 
         // Current existing workflow stages.
         $stages = WorkflowStageDAO::getWorkflowStageTranslationKeys();
 
         foreach (array_keys($stages) as $stageId) {
-            $userGroupDao->removeGroupFromStage($contextId, $userGroupId, $stageId);
+           Repo::userGroup()->removeGroupFromStage($contextId, $userGroupId, $stageId);
         }
 
         foreach ($userAssignedStages as $stageId) {
@@ -275,7 +274,11 @@ class UserGroupForm extends Form
 
             // Check if is a valid stage.
             if (in_array($stageId, array_keys($stages))) {
-                $userGroupDao->assignGroupToStage($contextId, $userGroupId, $stageId);
+                UserGroupStage::create([
+                    'contextId' => $contextId,
+                    'userGroupId' => $userGroupId,
+                    'stageId' => $stageId
+                ]);
             } else {
                 fatalError('Invalid stage id');
             }

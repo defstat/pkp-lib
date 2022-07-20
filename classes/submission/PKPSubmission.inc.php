@@ -470,9 +470,11 @@ abstract class PKPSubmission extends \PKP\core\DataObject
         $userGroupIds = array_map(function ($author) {
             return $author->getData('userGroupId');
         }, Repo::author()->getSubmissionAuthors($this)->toArray());
-        $userGroups = array_map(function ($userGroupId) {
-            return Repo::userGroup()->get($userGroupId);
-        }, array_unique($userGroupIds));
+
+        $userGroupsCollector = Repo::userGroup()->getCollector()
+            ->filterByIds(array_unique($userGroupIds));
+
+        $userGroups = Repo::userGroup()->getMany($userGroupsCollector);
 
         return $publication->getAuthorString($userGroups);
     }

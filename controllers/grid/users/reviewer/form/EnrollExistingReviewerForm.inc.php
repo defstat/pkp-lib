@@ -1,4 +1,5 @@
 <?php
+use APP\facades\Repo;
 
 /**
  * @file controllers/grid/users/reviewer/form/EnrollExistingReviewerForm.inc.php
@@ -63,8 +64,7 @@ class EnrollExistingReviewerForm extends ReviewerForm
         $userId = (int) $this->getData('userId');
 
         $userGroupId = (int) $this->getData('userGroupId');
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $userGroupDao->assignUserToGroup($userId, $userGroupId);
+        Repo::userGroup()->assignUserToGroup($userId, $userGroupId);
 
         // Set the reviewerId in the Form for the parent class to use
         $this->setData('reviewerId', $userId);

@@ -20,6 +20,7 @@ use APP\core\Application;
 use APP\template\TemplateManager;
 use PKP\db\DAORegistry;
 use PKP\user\InterestManager;
+use APP\facades\Repo;
 
 class RolesForm extends BaseProfileForm
 {
@@ -42,12 +43,11 @@ class RolesForm extends BaseProfileForm
     {
         $templateMgr = TemplateManager::getManager($request);
 
-        $userGroupAssignmentDao = DAORegistry::getDAO('UserGroupAssignmentDAO'); /** @var UserGroupAssignmentDAO $userGroupAssignmentDao */
-        $userGroupAssignments = $userGroupAssignmentDao->getByUserId($request->getUser()->getId());
-        $userGroupIds = [];
-        while ($assignment = $userGroupAssignments->next()) {
-            $userGroupIds[] = $assignment->getUserGroupId();
-        }
+        $userGroupIds = Repo::userGroup()->getIds(
+            Repo::userGroup()->getCollector()
+                ->filterByUserIds([$request->getUser()->getId()])
+        )->toArray();
+        
         $templateMgr->assign('userGroupIds', $userGroupIds);
 
         $userFormHelper = new UserFormHelper();

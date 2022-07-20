@@ -79,7 +79,6 @@ class UserFormHelper
      */
     public function saveRoleContent($form, $user)
     {
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
         $contextDao = Application::getContextDAO();
         $contexts = $contextDao->getAll(true);
         while ($context = $contexts->next()) {
@@ -111,9 +110,9 @@ class UserFormHelper
                     $groupId = $userGroup->getId();
                     $inGroup = Repo::userGroup()->userInGroup($user->getId(), $groupId);
                     if (!$inGroup && array_key_exists($groupId, $groupFormData)) {
-                        $userGroupDao->assignUserToGroup($user->getId(), $groupId, $context->getId());
+                        Repo::userGroup()->assignUserToGroup($user->getId(), $groupId, $context->getId());
                     } elseif ($inGroup && !array_key_exists($groupId, $groupFormData)) {
-                        $userGroupDao->removeUserFromGroup($user->getId(), $groupId, $context->getId());
+                        Repo::userGroup()->removeUserFromGroup($user->getId(), $groupId, $context->getId());
                     }
                 }
             }

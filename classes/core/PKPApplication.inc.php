@@ -551,7 +551,6 @@ abstract class PKPApplication implements iPKPApplicationInfoProvider
             'SubmissionSubjectDAO' => 'PKP\submission\SubmissionSubjectDAO',
             'SubmissionSubjectEntryDAO' => 'PKP\submission\SubmissionSubjectEntryDAO',
             'TemporaryFileDAO' => 'PKP\file\TemporaryFileDAO',
-            'UserGroupAssignmentDAO' => 'PKP\security\UserGroupAssignmentDAO',
             'UserGroupDAO' => 'PKP\security\UserGroupDAO',
             'UserStageAssignmentDAO' => 'PKP\user\UserStageAssignmentDAO',
             'VersionDAO' => 'PKP\site\VersionDAO',

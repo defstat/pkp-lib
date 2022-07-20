@@ -34,19 +34,16 @@ use PKP\identity\Identity;
 use PKP\plugins\HookRegistry;
 use PKP\workflow\WorkflowStageDAO;
 use PKP\xml\PKPXMLParser;
+use PKP\userGroup\relationships\UserGroupStage;
 
 class UserGroupDAO extends DAO
 {
-    /** @var UserGroupAssignmentDAO */
-    public $userGroupAssignmentDao;
-
     /**
      * Constructor.
      */
     public function __construct()
     {
         parent::__construct();
-        $this->userGroupAssignmentDao = DAORegistry::getDAO('UserGroupAssignmentDAO');
     }
 
     /**
@@ -97,37 +94,6 @@ class UserGroupDAO extends DAO
             ->select('ug.user_group_id')
             ->selectRaw('COUNT(0) AS count')
             ->pluck('count', 'user_group_id');
-    }
-
-    /**
-     * Retrieve the number of users associated with the specified context.
-     *
-     * @param int $contextId
-     * @param null|mixed $userGroupId
-     * @param null|mixed $roleId
-     *
-     * @return int
-     */
-    public function getContextUsersCount($contextId, $userGroupId = null, $roleId = null)
-    {
-        $params = [(int) $contextId];
-        if ($userGroupId) {
-            $params[] = (int) $userGroupId;
-        }
-        if ($roleId) {
-            $params[] = (int) $roleId;
-        }
-        $result = $this->retrieve(
-            'SELECT COUNT(DISTINCT(uug.user_id)) AS row_count
-            FROM user_groups ug
-                JOIN user_user_groups uug ON ug.user_group_id = uug.user_group_id
-            WHERE ug.context_id = ?' .
-                ($userGroupId ? ' AND ug.user_group_id = ?' : '') .
-                ($roleId ? ' AND ug.role_id = ?' : ''),
-            $params
-        );
-        $row = (array) $result->current();
-        return $row ? $row['row_count'] : 0;
     }
 
     /**
@@ -261,80 +227,7 @@ class UserGroupDAO extends DAO
     //
 
 
-    /**
-     * Assign a given user to a given user group
-     *
-     * @param int $userId
-     * @param int $groupId
-     */
-    public function assignUserToGroup($userId, $groupId)
-    {
-        $assignment = $this->userGroupAssignmentDao->newDataObject();
-        $assignment->setUserId($userId);
-        $assignment->setUserGroupId($groupId);
-        $this->userGroupAssignmentDao->insertObject($assignment);
-    }
-
-    /**
-     * remove a given user from a given user group
-     *
-     * @param int $userId
-     * @param int $groupId
-     * @param int $contextId
-     */
-    public function removeUserFromGroup($userId, $groupId, $contextId)
-    {
-        $assignments = $this->userGroupAssignmentDao->getByUserId($userId, $contextId);
-        while ($assignment = $assignments->next()) {
-            if ($assignment->getUserGroupId() == $groupId) {
-                $this->userGroupAssignmentDao->deleteAssignment($assignment);
-            }
-        }
-    }
-
-    /**
-     * Delete all stage assignments in a user group.
-     *
-     * @param int $contextId
-     * @param int $userGroupId
-     */
-    public function removeAllStagesFromGroup($contextId, $userGroupId)
-    {
-        $assignedStages = $this->getAssignedStagesByUserGroupId($contextId, $userGroupId);
-        foreach ($assignedStages as $stageId => $stageLocaleKey) {
-            $this->removeGroupFromStage($contextId, $userGroupId, $stageId);
-        }
-    }
-
-    /**
-     * Assign a user group to a stage
-     *
-     * @param int $contextId
-     * @param int $userGroupId
-     * @param int $stageId
-     */
-    public function assignGroupToStage($contextId, $userGroupId, $stageId)
-    {
-        $this->update(
-            'INSERT INTO user_group_stage (context_id, user_group_id, stage_id) VALUES (?, ?, ?)',
-            [(int) $contextId, (int) $userGroupId, (int) $stageId]
-        );
-    }
-
-    /**
-     * Remove a user group from a stage
-     *
-     * @param int $contextId
-     * @param int $userGroupId
-     * @param int $stageId
-     */
-    public function removeGroupFromStage($contextId, $userGroupId, $stageId)
-    {
-        $this->update(
-            'DELETE FROM user_group_stage WHERE context_id = ? AND user_group_id = ? AND stage_id = ?',
-            [(int) $contextId, (int) $userGroupId, (int) $stageId]
-        );
-    }
+    
 
     //
     // Extra settings (not handled by rest of Dao)
@@ -464,7 +357,11 @@ class UserGroupDAO extends DAO
             if (is_array($defaultStages)) { // test for groups with no stage assignments
                 foreach ($defaultStages as $stageId) {
                     if (!empty($stageId) && $stageId <= WORKFLOW_STAGE_ID_PRODUCTION && $stageId >= WORKFLOW_STAGE_ID_SUBMISSION) {
-                        $this->assignGroupToStage($contextId, $userGroupId, $stageId);
+                        UserGroupStage::create([
+                            'contextId' => $contextId,
+                            'userGroupId' => $userGroupId,
+                            'stageId' => $stageId
+                        ]);
                     }
                 }
             }
@@ -634,175 +531,6 @@ class UserGroupDAO extends DAO
     //
     // Public helper methods
     //
-
-    /**
-     * Get the user groups assigned to each stage.
-     *
-     * @param int $contextId Context ID
-     * @param int $stageId WORKFLOW_STAGE_ID_...
-     * @param int $roleId Optional ROLE_ID_... to filter results by
-     * @param DBResultRange (optional) $dbResultRange
-     *
-     * @return DAOResultFactory
-     */
-    public function getUserGroupsByStage($contextId, $stageId, $roleId = null, $dbResultRange = null)
-    {
-        $params = [(int) $contextId, (int) $stageId];
-        if ($roleId) {
-            $params[] = (int) $roleId;
-        }
-        return new DAOResultFactory(
-            $this->retrieveRange(
-                $sql = 'SELECT ug.*
-                FROM user_groups ug
-                    JOIN user_group_stage ugs ON (ug.user_group_id = ugs.user_group_id AND ug.context_id = ugs.context_id)
-                WHERE ugs.context_id = ? AND
-                    ugs.stage_id = ?
-                    ' . ($roleId ? 'AND ug.role_id = ?' : '') . '
-                ORDER BY ug.role_id ASC',
-                $params,
-                $dbResultRange
-            ),
-            $this,
-            '_returnFromRow',
-            [],
-            $sql,
-            $params,
-            $dbResultRange
-        );
-    }
-
-    /**
-     * Get all stages assigned to one user group in one context.
-     *
-     * @param int $contextId The context ID.
-     * @param int $userGroupId The user group ID
-     *
-     * @return array
-     */
-    public function getAssignedStagesByUserGroupId($contextId, $userGroupId)
-    {
-        $result = $this->retrieve(
-            'SELECT stage_id
-            FROM user_group_stage
-            WHERE context_id = ? AND
-                user_group_id = ?',
-            [(int) $contextId, (int) $userGroupId]
-        );
-
-        $returner = [];
-        foreach ($result as $row) {
-            $returner[$row->stage_id] = WorkflowStageDAO::getTranslationKeyFromId($row->stage_id);
-        }
-        return $returner;
-    }
-
-    /**
-     * Check if a user group is assigned to a stage
-     *
-     * @param int $userGroupId
-     * @param int $stageId
-     *
-     * @return bool
-     */
-    public function userGroupAssignedToStage($userGroupId, $stageId)
-    {
-        $result = $this->retrieve(
-            'SELECT COUNT(*) AS row_count
-            FROM user_group_stage
-            WHERE user_group_id = ? AND
-            stage_id = ?',
-            [(int) $userGroupId, (int) $stageId]
-        );
-        $row = $result->current();
-        return $row ? (bool) $row->row_count : false;
-    }
-
-    /**
-     * Check to see whether a user is assigned to a stage ID via a user group.
-     *
-     * @param int $contextId
-     * @param int $userId
-     *
-     * @return bool
-     */
-    public function userAssignmentExists($contextId, $userId, $stageId)
-    {
-        $result = $this->retrieve(
-            'SELECT COUNT(*) AS row_count
-            FROM user_group_stage ugs,
-            user_user_groups uug
-            WHERE ugs.user_group_id = uug.user_group_id AND
-            ugs.context_id = ? AND
-            uug.user_id = ? AND
-            ugs.stage_id = ?',
-            [(int) $contextId, (int) $userId, (int) $stageId]
-        );
-        $row = $result->current();
-        return $row ? (bool) $row->row_count : false;
-    }
-
-    /**
-     * Get all user group IDs with recommendOnly option enabled.
-     *
-     * @param int $contextId
-     * @param int $roleId (optional)
-     *
-     * @return array
-     */
-    public function getRecommendOnlyGroupIds($contextId, $roleId = null)
-    {
-        $params = [(int) $contextId];
-        if ($roleId) {
-            $params[] = (int) $roleId;
-        }
-
-        $result = $this->retrieve(
-            'SELECT ug.user_group_id AS user_group_id
-            FROM user_groups ug
-            JOIN user_group_settings ugs ON (ugs.user_group_id = ug.user_group_id AND ugs.setting_name = \'recommendOnly\' AND ugs.setting_value = \'1\')
-            WHERE ug.context_id = ?
-            ' . ($roleId ? ' AND ug.role_id = ?' : ''),
-            $params
-        );
-
-        $userGroupIds = [];
-        foreach ($result as $row) {
-            $userGroupIds[] = (int) $row->user_group_id;
-        }
-        return $userGroupIds;
-    }
-
-    /**
-     * Get all user group IDs with permit_metadata_edit option enabled.
-     *
-     * @param int $contextId
-     * @param int $roleId (optional)
-     *
-     * @return array
-     */
-    public function getPermitMetadataEditGroupIds($contextId, $roleId = null)
-    {
-        $params = [(int) $contextId];
-        if ($roleId) {
-            $params[] = (int) $roleId;
-        }
-
-        $result = $this->retrieve(
-            'SELECT ug.user_group_id AS user_group_id
-            FROM user_groups ug
-            WHERE permit_metadata_edit = 1 AND
-            ug.context_id = ?
-            ' . ($roleId ? ' AND ug.role_id = ?' : ''),
-            $params
-        );
-
-        $userGroupIds = [];
-        foreach ($result as $row) {
-            $userGroupIds[] = (int) $row->user_group_id;
-        }
-        return $userGroupIds;
-    }
 
     /**
      * Get a list of roles not able to change submissionMetadataEdit permission option.

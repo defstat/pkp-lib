@@ -1,4 +1,5 @@
 <?php
+use PKP\userGroup\relationships\UserGroupStage;
 
 /**
  * @file controllers/grid/users/stageParticipant/form/AddParticipantForm.inc.php
@@ -115,14 +116,13 @@ class AddParticipantForm extends StageParticipantNotifyForm
      */
     public function fetch($request, $template = null, $display = false)
     {
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $userGroups = $userGroupDao->getUserGroupsByStage(
+        $userGroups = Repo::userGroup()->getUserGroupsByStage(
             $request->getContext()->getId(),
             $this->getStageId()
         );
 
         $userGroupOptions = [];
-        while ($userGroup = $userGroups->next()) {
+        foreach ($userGroups as $userGroup) {
             // Exclude reviewers.
             if ($userGroup->getRoleId() == Role::ROLE_ID_REVIEWER) {
                 continue;
@@ -136,9 +136,17 @@ class AddParticipantForm extends StageParticipantNotifyForm
             'userGroupOptions' => $userGroupOptions,
             'selectedUserGroupId' => array_shift($keys), // assign the first element as selected
             'possibleRecommendOnlyUserGroupIds' => $this->_possibleRecommendOnlyUserGroupIds,
-            'recommendOnlyUserGroupIds' => $userGroupDao->getRecommendOnlyGroupIds($request->getContext()->getId()),
+            'recommendOnlyUserGroupIds' => Repo::userGroup()->getMany(
+                Repo::userGroup()->getCollector()
+                    ->filterByContextIds([$request->getContext()->getId()])
+                    ->filterByIsRecommendOnly()
+            )->toArray(),
             'notPossibleEditSubmissionMetadataPermissionChange' => $this->_managerGroupIds,
-            'permitMetadataEditUserGroupIds' => $userGroupDao->getPermitMetadataEditGroupIds($request->getContext()->getId()),
+            'permitMetadataEditUserGroupIds' => Repo::userGroup()->getMany(
+                Repo::userGroup()->getCollector()
+                    ->filterByContextIds([$request->getContext()->getId()])
+                    ->filterByPermitMetadataEdit(true)
+            )->toArray(),
             'submissionId' => $this->getSubmission()->getId(),
             'userGroupId' => '',
             'userIdSelected' => '',
@@ -231,7 +239,6 @@ class AddParticipantForm extends StageParticipantNotifyForm
     public function execute(...$functionParams)
     {
         $stageAssignmentDao = DAORegistry::getDAO('StageAssignmentDAO'); /** @var StageAssignmentDAO $stageAssignmentDao */
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
 
         $submission = $this->getSubmission();
         $userGroupId = (int) $this->getData('userGroupId');
@@ -240,7 +247,7 @@ class AddParticipantForm extends StageParticipantNotifyForm
         $canChangeMetadata = $this->_isChangePermitMetadataAllowed($userGroupId) ? (bool) $this->getData('canChangeMetadata') : true;
 
         // sanity check
-        if ($userGroupDao->userGroupAssignedToStage($userGroupId, $this->getStageId())) {
+        if (UserGroupStage::withStageId($this->getStageId())->withUserGroupId($userGroupId)->get()->isNotEmpty()) {
             $updated = false;
 
             if ($this->_assignmentId) {
