@@ -342,7 +342,7 @@ class QueryForm extends Form
             $allParticipants = [];
             $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
             foreach ($usersIterator as $user) {
-                $allUserGroups = $userGroupDao->getByUserId($user->getId(), $context->getId())->toArray();
+                $allUserGroups = Repo::userGroup()->userUserGroups($user->getId(), $context->getId());
 
                 $userRoles = [];
                 $userAssignments = $stageAssignmentDao->getBySubmissionAndStageId($query->getAssocId(), $query->getStageId(), null, $user->getId())->toArray();

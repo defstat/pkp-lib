@@ -82,15 +82,13 @@ class PKPSubmissionSubmitStep1Form extends SubmissionSubmitForm
 
         // Ensure that the user is in the specified userGroupId or trying to enroll an allowed role
         $userGroupId = (int) $this->getData('userGroupId');
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
         $request = Application::get()->getRequest();
-        $context = $request->getContext();
         $user = $request->getUser();
         if (!$user) {
             return false;
         }
 
-        if ($userGroupDao->userInGroup($user->getId(), $userGroupId)) {
+        if (Repo::userGroup()->userInGroup($user->getId(), $userGroupId)) {
             return true;
         }
         $userGroup = Repo::userGroup()->get($userGroupId);
@@ -140,7 +138,7 @@ class PKPSubmissionSubmitStep1Form extends SubmissionSubmitForm
         }
 
         // Set default group to default author group
-        $defaultGroup = Repo::userGroup()->getByRoleIds([Role::ROLE_ID_AUTHOR], $this->context->getId(), true)->toArray();
+        $defaultGroup = Repo::userGroup()->getByRoleIds([Role::ROLE_ID_AUTHOR], $this->context->getId(), true)->first();
         $noExistingRoles = false;
         $managerGroups = false;
 
@@ -154,7 +152,7 @@ class PKPSubmissionSubmitStep1Form extends SubmissionSubmitForm
             $userGroupNames = array_replace($userGroupNames, $availableUserGroupNames);
 
             // Set default group to default manager group
-            $defaultGroup = Repo::userGroup()->getByRoleIds([Role::ROLE_ID_MANAGER], $this->context->getId(), true)->toArray();
+            $defaultGroup = Repo::userGroup()->getByRoleIds([Role::ROLE_ID_MANAGER], $this->context->getId(), true)->first();
 
         // else if the user only has existing author roles, add to selection
         } elseif (!empty($authorUserGroupAssignments)) {
@@ -368,7 +366,7 @@ class PKPSubmissionSubmitStep1Form extends SubmissionSubmitForm
 
         // Enroll user if needed
         $userGroupId = (int) $this->getData('userGroupId');
-        if (!$userGroupDao->userInGroup($user->getId(), $userGroupId)) {
+        if (!Repo::userGroup()->userInGroup($user->getId(), $userGroupId)) {
             $userGroupDao->assignUserToGroup($user->getId(), $userGroupId);
         }
 

@@ -219,10 +219,8 @@ class AddParticipantForm extends StageParticipantNotifyForm
     {
         $userGroupId = (int) $this->getData('userGroupId');
         $userId = (int) $this->getData('userId');
-        $submission = $this->getSubmission();
 
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        return $userGroupDao->userInGroup($userId, $userGroupId) && Repo::userGroup()->get($userGroupId);
+        return Repo::userGroup()->userInGroup($userId, $userGroupId) && Repo::userGroup()->get($userGroupId);
     }
 
     /**

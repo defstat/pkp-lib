@@ -29,7 +29,7 @@ class Collector implements CollectorInterface
     public $dao;
 
     /** @var array|null */
-    public $contextIds = null; // contextHasGroup, getByContextId, 
+    public $contextIds = null; // getByContextId, 
 
     /** @var array|null */
     public $roleIds = null;
@@ -37,8 +37,7 @@ class Collector implements CollectorInterface
     /** @var array|null */
     public $stageIds = null; // getUserGroupsByStage
 
-    // ?? userInGroup, userInAnyGroup, getUsersByContextId
-    // ?? deleteAssignmentsByUserId, deleteAssignmentsByUserGroupId, deleteAssignmentsByContextId
+    // ?? getUsersByContextId
 
     /** @var bool|null */
     public ?bool $isDefault = null;
@@ -131,6 +130,15 @@ class Collector implements CollectorInterface
     }
 
     /**
+     * Filter by user ids
+     */
+    public function filterByUserIds(?array $userIds): self
+    {
+        $this->userIds = $userIds;
+        return $this;
+    }
+
+    /**
      * Include orderBy columns to the collector query
      */
     public function orderBy(?string $orderBy): self
@@ -165,6 +173,11 @@ class Collector implements CollectorInterface
     {
         $q = DB::table('user_groups as a');
 
+        if (isset($this->userIds)) {
+            $q->join('user_user_groups as uug', 'a.user_group_id', '=', 'uug.user_group_id');
+            $q->whereIn('uug.user_group_id', $this->userIds);
+        }
+
         if (isset($this->contextIds)) {
             $q->whereIn('a.context_id', $this->contextIds);
         }
@@ -172,10 +185,6 @@ class Collector implements CollectorInterface
         if (isset($this->roleIds)) {
             $q->whereIn('a.role_id', $this->roleIds);
         }
-
-        // if (isset($this->stageIds)) {
-        //     $q->whereIn('s.context_id', $this->contextIds);
-        // }
 
         $q->when($this->isRecommendOnly !== null, function (Builder $q) {
             $q->whereIn('a.user_group_id', function (Builder $q) {

@@ -23,6 +23,7 @@ use Illuminate\Support\LazyCollection;
 use PKP\plugins\HookRegistry;
 use PKP\services\PKPSchemaService;
 use PKP\validation\ValidatorFactory;
+use PKP\userGroup\relationships\UserUserGroup;
 
 class Repository
 {
@@ -254,5 +255,78 @@ class Repository
         }
 
         return Repo::userGroup()->getMany($collector);
+    }
+
+    /**
+    * return all user groups ids for a user id
+    */
+    public function userUserGroups(int $userId, ?int $contextId = null) : LazyCollection
+    {
+
+        $collector = Repo::userGroup()
+            ->getCollector()
+            ->filterByUserIds([$userId]);
+
+        if ($contextId) {
+            $collector->filterByContextIds([$contextId]);
+        }
+
+        return Repo::userGroup()->getMany($collector);
+    }
+
+    /**
+    * return whether a user is in a user group
+    */
+    public function userInGroup(int $userId, int $userGroupId) : bool
+    {
+        
+
+        $collector = Repo::userGroup()
+            ->getCollector()
+            ->filterByUserIds([$userId]);
+
+        $userGroups = $this->getMany($collector);
+
+        return $userGroups->where('id', $userGroupId)->count();
+    }
+
+    /**
+    * return whether a context has a specific user group
+    */
+    public function contextHasGroup(int $contextId, int $userGroupId) : bool
+    {
+        $collector = Repo::userGroup()
+            ->getCollector()
+            ->filterByContextIds([$contextId]);
+
+        $userGroups = $this->getMany($collector);
+
+        return $userGroups->where('id', $userGroupId)->count();
+    }
+
+
+    public function deleteAssignmentsByUserId(int $userId, ?int $userGroupId = null) : bool
+    {
+        $query = UserUserGroup::withUserId($userId);
+
+        if ($userGroupId) {
+            $query::withUserGroupId($userGroupId);
+        }
+
+        return $query->delete();
+    }
+
+    public function deleteAssignmentsByContextId(int $contextId, ?int $userId = null) : bool
+    {
+        $userUserGroups = UserUserGroup::whereHas("userGroup", function($subQuery) {
+            $subQuery->where("userGroup.contextId", "=", $contextId);
+        });
+
+        if ($userId) {
+            $userUserGroups::withUserId($userId);
+        }
+        
+
+        return $userUserGroups->delete();
     }
 }

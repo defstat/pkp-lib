@@ -71,43 +71,6 @@ class UserGroupAssignmentDAO extends \PKP\db\DAO
         );
     }
 
-    /**
-     * Remove all user group assignments for a given group
-     *
-     * @param int $userGroupId
-     */
-    public function deleteAssignmentsByUserGroupId($userGroupId)
-    {
-        return $this->update('DELETE FROM user_user_groups WHERE user_group_id = ?', [(int) $userGroupId]);
-    }
-
-    /**
-     * Remove all user group assignments in a given context
-     *
-     * @param int $contextId
-     * @param int $userId
-     */
-    public function deleteAssignmentsByContextId($contextId, $userId = null)
-    {
-        $params = [(int) $contextId];
-        if ($userId) {
-            $params[] = (int) $userId;
-        }
-        $result = $this->retrieve(
-            'SELECT	uug.user_group_id, uug.user_id
-			FROM	user_groups ug
-				JOIN user_user_groups uug ON ug.user_group_id = uug.user_group_id
-			WHERE	ug.context_id = ?
-				' . ($userId ? ' AND uug.user_id = ?' : ''),
-            $params
-        );
-
-        $assignments = new DAOResultFactory($result, $this, '_fromRow');
-        while ($assignment = $assignments->next()) {
-            $this->deleteByUserId($assignment->getUserId(), $assignment->getUserGroupId());
-        }
-    }
-
 
     /**
      * Retrieve user group assignments for a user

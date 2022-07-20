@@ -354,13 +354,14 @@ class Repository
 
         // Transfer old user's roles
         $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $userGroups = $userGroupDao->getByUserId($oldUserId);
-        while ($userGroup = $userGroups->next()) {
-            if (!$userGroupDao->userInGroup($newUserId, $userGroup->getId())) {
+        $userGroups = Repo::userGroup()->userUserGroups($oldUserId);
+        foreach ($userGroups as $userGroup) {
+            if (!Repo::userGroup()->userInGroup($newUserId, $userGroup->getId())) {
                 $userGroupDao->assignUserToGroup($newUserId, $userGroup->getId());
             }
         }
-        $userGroupDao->deleteAssignmentsByUserId($oldUserId);
+        
+        Repo::userGroup()->deleteAssignmentsByUserId($oldUserId);
 
         // Transfer stage assignments.
         $stageAssignmentDao = DAORegistry::getDAO('StageAssignmentDAO'); /** @var StageAssignmentDAO $stageAssignmentDao */

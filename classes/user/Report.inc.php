@@ -24,6 +24,7 @@ use PKP\facades\Locale;
 use PKP\db\DAORegistry;
 use PKP\security\UserGroup;
 use PKP\security\UserGroupDAO;
+use APP\facades\Repo;
 
 class Report
 {
@@ -91,10 +92,9 @@ class Report
     private function _getDataRow(User $user): array
     {
         /** @var UserGroupDAO */
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO');
-        $userGroups = $userGroupDao->getByUserId($user->getId());
+        $userGroups = Repo::userGroup()->userUserGroups($user->getId());
         $groups = [];
-        while ($userGroup = $userGroups->next()) {
+        foreach($userGroups as $userGroup) {
             $groups[$userGroup->getId()] = 0;
         }
 

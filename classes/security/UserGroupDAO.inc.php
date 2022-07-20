@@ -84,130 +84,6 @@ class UserGroupDAO extends DAO
     }
 
     /**
-     * Check if a user is in a particular user group
-     *
-     * @param int $userId
-     * @param int $userGroupId
-     *
-     * @return bool
-     */
-    public function userInGroup($userId, $userGroupId)
-    {
-        $result = $this->retrieve(
-            'SELECT count(*) AS row_count
-            FROM user_groups ug
-                JOIN user_user_groups uug ON ug.user_group_id = uug.user_group_id
-            WHERE
-                uug.user_id = ? AND
-                ug.user_group_id = ?',
-            [(int) $userId, (int) $userGroupId]
-        );
-        $row = $result->current();
-        return $row ? (bool) $row->row_count : false;
-    }
-
-    /**
-     * Check if a user is in any user group
-     *
-     * @param int $userId
-     * @param int $contextId optional
-     *
-     * @return bool
-     */
-    public function userInAnyGroup($userId, $contextId = null)
-    {
-        $params = [(int) $userId];
-        if ($contextId) {
-            $params[] = (int) $contextId;
-        }
-
-        $result = $this->retrieve(
-            'SELECT count(*) AS row_count
-            FROM user_groups ug
-                JOIN user_user_groups uug ON ug.user_group_id = uug.user_group_id
-            WHERE uug.user_id = ?
-                ' . ($contextId ? ' AND ug.context_id = ?' : ''),
-            $params
-        );
-        $row = $result->current();
-        return $row ? (bool) $row->row_count : false;
-    }
-
-    /**
-     * Retrieve user groups to which a user is assigned.
-     *
-     * @param int $userId
-     * @param int $contextId
-     *
-     * @return DAOResultFactory
-     */
-    public function getByUserId($userId, $contextId = null)
-    {
-        $params = [(int) $userId];
-        if ($contextId) {
-            $params[] = (int) $contextId;
-        }
-
-        $result = $this->retrieve(
-            'SELECT ug.*
-            FROM user_groups ug
-                JOIN user_user_groups uug ON ug.user_group_id = uug.user_group_id
-                WHERE uug.user_id = ?
-                ' . ($contextId ? ' AND ug.context_id = ?' : ''),
-            $params
-        );
-
-        return new DAOResultFactory($result, $this, '_returnFromRow');
-    }
-
-    /**
-     * Validation check to see if user group exists for a given context
-     *
-     * @param int $contextId
-     * @param int $userGroupId
-     *
-     * @return bool
-     */
-    public function contextHasGroup($contextId, $userGroupId)
-    {
-        $result = $this->retrieve(
-            'SELECT count(*) AS row_count
-            FROM user_groups ug
-            WHERE ug.user_group_id = ?
-            AND ug.context_id = ?',
-            [(int) $userGroupId, (int) $contextId]
-        );
-        $row = (array) $result->current();
-        return $row && $row['row_count'] != 0;
-    }
-
-    /**
-     * Retrieve user groups for a given context (all contexts if null)
-     *
-     * @param int $contextId (optional)
-     * @param DBResultRange $dbResultRange (optional)
-     *
-     * @return DAOResultFactory
-     */
-    public function getByContextId($contextId = null, $dbResultRange = null)
-    {
-        $params = [];
-        if ($contextId) {
-            $params[] = (int) $contextId;
-        }
-
-        $result = $this->retrieveRange(
-            $sql = 'SELECT ug.*
-            FROM user_groups ug' .
-                ($contextId ? ' WHERE ug.context_id = ?' : ''),
-            $params,
-            $dbResultRange
-        );
-
-        return new DAOResultFactory($result, $this, '_returnFromRow', [], $sql, $params, $dbResultRange);
-    }
-
-    /**
      * Retrieves a keyed Collection (key = user_group_id, value = count) with the amount of active users for each user group
      */
     public function getUserCountByContextId(?int $contextId = null): Collection
@@ -313,6 +189,7 @@ class UserGroupDAO extends DAO
         return new DAOResultFactory($result, Repo::user()->dao, 'fromRow');
     }
 
+    // TODO:: May need to go to User Repository
     /**
      * return an Iterator of User objects given the search parameters
      *
@@ -382,37 +259,7 @@ class UserGroupDAO extends DAO
     //
     // UserGroupAssignment related
     //
-    /**
-     * Delete all user group assignments for a given userId
-     *
-     * @param int $userId
-     * @param null|mixed $userGroupId
-     */
-    public function deleteAssignmentsByUserId($userId, $userGroupId = null)
-    {
-        $this->userGroupAssignmentDao->deleteByUserId($userId, $userGroupId);
-    }
 
-    /**
-     * Delete all assignments to a given user group
-     *
-     * @param int $userGroupId
-     */
-    public function deleteAssignmentsByUserGroupId($userGroupId)
-    {
-        $this->userGroupAssignmentDao->deleteAssignmentsByUserGroupId($userGroupId);
-    }
-
-    /**
-     * Remove all user group assignments for a given user in a context
-     *
-     * @param int $contextId
-     * @param int $userId
-     */
-    public function deleteAssignmentsByContextId($contextId, $userId = null)
-    {
-        $this->userGroupAssignmentDao->deleteAssignmentsByContextId($contextId, $userId);
-    }
 
     /**
      * Assign a given user to a given user group

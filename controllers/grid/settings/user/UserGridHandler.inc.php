@@ -507,13 +507,16 @@ class UserGridHandler extends GridHandler
         }
 
         // Remove user from all user group assignments for this context.
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-
         // Check if this user has any user group assignments for this context.
-        if (!$userGroupDao->userInAnyGroup($userId, $context->getId())) {
+        $userGroupCount = Repo::userGroup()
+            ->userUserGroups($userId, $context->getId())
+            ->count();
+            
+        if (!$userGroupCount) {
             return new JSONMessage(false, __('grid.user.userNoRoles'));
         } else {
-            $userGroupDao->deleteAssignmentsByContextId($context->getId(), $userId);
+            Repo::userGroup()->deleteAssignmentsByContextId($context->getId(), $userId);
+            
             return \PKP\db\DAO::getDataChangedEvent($userId);
         }
     }

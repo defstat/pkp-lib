@@ -109,7 +109,7 @@ class UserFormHelper
                     }
 
                     $groupId = $userGroup->getId();
-                    $inGroup = $userGroupDao->userInGroup($user->getId(), $groupId);
+                    $inGroup = Repo::userGroup()->userInGroup($user->getId(), $groupId);
                     if (!$inGroup && array_key_exists($groupId, $groupFormData)) {
                         $userGroupDao->assignUserToGroup($user->getId(), $groupId, $context->getId());
                     } elseif ($inGroup && !array_key_exists($groupId, $groupFormData)) {

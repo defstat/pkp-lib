@@ -16,6 +16,7 @@ namespace PKP\components\forms\statistics\users;
 
 use PKP\components\forms\FieldOptions;
 use PKP\components\forms\FormComponent;
+use APP\facades\Repo;
 
 class ReportForm extends FormComponent
 {
@@ -34,7 +35,7 @@ class ReportForm extends FormComponent
         $this->addPage(['id' => 'default', 'submitButton' => ['label' => __('common.export')]]);
         $this->addGroup(['id' => 'default', 'pageId' => 'default']);
 
-        $userGroups = iterator_to_array(\DAORegistry::getDAO('UserGroupDAO')->getByContextId($context->getId())->toIterator());
+        $userGroups = Repo::userGroup()->getByContextId($context->getId())->toArray();
         $this->addField(new FieldOptions('userGroupIds', [
             'groupId' => 'default',
             'label' => __('user.group'),

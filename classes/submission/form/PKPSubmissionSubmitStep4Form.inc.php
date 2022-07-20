@@ -108,8 +108,8 @@ class PKPSubmissionSubmitStep4Form extends SubmissionSubmitForm
         $subEditorsDao = DAORegistry::getDAO('SubEditorsDAO'); /** @var SubEditorsDAO $subEditorsDao */
         $subEditors = $subEditorsDao->getBySubmissionGroupId($this->submission->getSectionId(), ASSOC_TYPE_SECTION, $this->submission->getContextId());
         foreach ($subEditors as $subEditor) {
-            $userGroups = $userGroupDao->getByUserId($subEditor->getId(), $this->submission->getContextId());
-            while ($userGroup = $userGroups->next()) {
+            $userGroups = Repo::userGroup()->userUserGroups($subEditor->getId(), $this->submission->getContextId());
+            foreach ($userGroups as $userGroup) {
                 if ($userGroup->getRoleId() != Role::ROLE_ID_SUB_EDITOR) {
                     continue;
                 }
@@ -130,8 +130,8 @@ class PKPSubmissionSubmitStep4Form extends SubmissionSubmitForm
         foreach ($categories as $category) {
             $subEditors = $subEditorsDao->getBySubmissionGroupId($category->getId(), ASSOC_TYPE_CATEGORY, $this->submission->getContextId());
             foreach ($subEditors as $subEditor) {
-                $userGroups = $userGroupDao->getByUserId($subEditor->getId(), $this->submission->getContextId());
-                while ($userGroup = $userGroups->next()) {
+                $userGroups = Repo::userGroup()->userUserGroups($subEditor->getId(), $this->submission->getContextId());
+                foreach($userGroups as $userGroup) {
                     if ($userGroup->getRoleId() != Role::ROLE_ID_SUB_EDITOR) {
                         continue;
                     }

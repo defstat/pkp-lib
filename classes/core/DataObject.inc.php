@@ -22,6 +22,7 @@ use PKP\facades\Locale;
 
 class DataObject
 {
+    public $timestamps = false;
     /** @var array Array of object data */
     public $_data = [];
 

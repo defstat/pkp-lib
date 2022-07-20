@@ -567,9 +567,8 @@ abstract class PKPWorkflowHandler extends Handler
         // see if the user is manager, and
         // if the group is recommendOnly
         if (!$makeRecommendation && !$makeDecision) {
-            $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-            $userGroups = $userGroupDao->getByUserId($user->getId(), $request->getContext()->getId());
-            while ($userGroup = $userGroups->next()) {
+            $userGroups = Repo::userGroup()->userUserGroups($user->getId(), $request->getContext()->getId());
+            foreach ($userGroups as $userGroup) {
                 if (in_array($userGroup->getRoleId(), [Role::ROLE_ID_MANAGER, Role::ROLE_ID_SITE_ADMIN])) {
                     if (!$userGroup->getRecommendOnly()) {
                         $makeDecision = true;

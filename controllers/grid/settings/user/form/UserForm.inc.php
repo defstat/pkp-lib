@@ -43,14 +43,16 @@ class UserForm extends Form
      * Initialize form data from current user profile.
      */
     public function initData()
-    {
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
-        $userGroups = $userGroupDao->getByUserId($this->userId);
-        $userGroupIds = [];
-        while ($userGroup = $userGroups->next()) {
-            $userGroupIds[] = $userGroup->getId();
+    {   
+        if (!is_null($this->userId)) {
+            $userGroups = Repo::userGroup()->userUserGroups($this->userId);
+            $userGroupIds = [];
+            foreach($userGroups as $userGroup) {
+                $userGroupIds[] = $userGroup->getId();
+            }
+            $this->setData('userGroupIds', $userGroupIds);
         }
-        $this->setData('userGroupIds', $userGroupIds);
+        
 
         parent::initData();
     }
@@ -97,8 +99,8 @@ class UserForm extends Form
     public function execute(...$functionArgs)
     {
         if (isset($this->userId)) {
-            $userGroupAssignmentDao = DAORegistry::getDAO('UserGroupAssignmentDAO'); /** @var UserGroupAssignmentDAO $userGroupAssignmentDao */
-            $userGroupAssignmentDao->deleteAssignmentsByContextId(Application::get()->getRequest()->getContext()->getId(), $this->userId);
+            Repo::userGroup()->deleteAssignmentsByContextId(Application::get()->getRequest()->getContext()->getId(), $this->userId);
+
             if ($this->getData('userGroupIds')) {
                 $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
                 foreach ($this->getData('userGroupIds') as $userGroupId) {

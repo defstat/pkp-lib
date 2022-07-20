@@ -32,6 +32,7 @@ use PKP\session\SessionManager;
 use PKP\security\authorization\UserRolesRequiredPolicy;
 use PKP\security\Role;
 use PKP\security\Validation;
+use APP\facades\Repo;
 
 class PKPHandler
 {
@@ -582,10 +583,12 @@ class PKPHandler
      */
     public function getFirstUserContext($user, $contexts)
     {
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
         $context = null;
         foreach ($contexts as $workingContext) {
-            $userIsEnrolled = $userGroupDao->userInAnyGroup($user->getId(), $workingContext->getId());
+            $userIsEnrolled = Repo::userGroup()
+                ->userUserGroups($user->getId(), $workingContext->getId())
+                ->count();
+
             if ($userIsEnrolled) {
                 $context = $workingContext;
                 break;

@@ -17,6 +17,7 @@ namespace PKP\security;
 
 use PKP\db\DAO;
 use PKP\db\DAORegistry;
+use APP\facades\Repo;
 
 class RoleDAO extends DAO
 {
@@ -92,12 +93,11 @@ class RoleDAO extends DAO
      */
     public function getByUserIdGroupedByContext($userId)
     {
-        $userGroupDao = DAORegistry::getDAO('UserGroupDAO'); /** @var UserGroupDAO $userGroupDao */
         $roleDao = DAORegistry::getDAO('RoleDAO'); /** @var RoleDAO $roleDao */
-        $userGroupsFactory = $userGroupDao->getByUserId($userId);
+        $userGroups = Repo::userGroup()->userUserGroups($userId);
 
         $roles = [];
-        while ($userGroup = $userGroupsFactory->next()) {
+        foreach ($userGroups as $userGroup) {
             $role = $roleDao->newDataObject();
             $role->setRoleId($userGroup->getRoleId());
             $roles[$userGroup->getContextId()][$userGroup->getRoleId()] = $role;
