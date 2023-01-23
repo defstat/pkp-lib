@@ -28,7 +28,6 @@ class MergeLocalesMigration
     public function up(): void
     {
         $tables = null;
-        $tablesAndColumns = null;
 
         $databaseName = DB::getDatabaseName();
 
@@ -39,9 +38,6 @@ class MergeLocalesMigration
                 break;
             case 'mysql':
                 $tables = DB::select('SHOW TABLES LIKE "%_settings"');
-                $tablesAndColumns = DB::select("SELECT DISTINCT table_name, column_name, column_type
-                                                FROM information_schema.columns
-                                                WHERE table_schema = '$databaseName'");
                 break;
         }
 
@@ -125,17 +121,6 @@ class MergeLocalesMigration
 
         foreach ($journalSettingsFormLocales as $journalSettingsFormLocale) {
             $this->updateArrayLocaleSetting($journalSettingsFormLocale->setting_value, ['es_MX', 'es_ES'], 'es', 'journal_settings', 'primary_locale', 'journal_id', $journalSettingsFormLocale->journal_id);
-        }
-
-        foreach ($tablesAndColumns as $tablesAndColumn) {
-            $all = DB::table($tablesAndColumn->TABLE_NAME)
-                ->where($tablesAndColumn->COLUMN_NAME, 'like', '%en\_US%')
-                ->get();
-            
-            foreach ($all as $one) {
-                if ($tablesAndColumn->COLUMN_NAME != "locale") 
-                    $k = "$tablesAndColumn->TABLE_NAME, $tablesAndColumn->COLUMN_NAME";
-            }
         }
     }
 
