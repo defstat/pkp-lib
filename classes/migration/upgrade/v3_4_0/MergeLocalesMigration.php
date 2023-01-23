@@ -57,7 +57,7 @@ class MergeLocalesMigration
 
         $this->updateArrayLocaleNoId($site->supported_locales, ['es_MX', 'es_ES'], 'es', 'site', 'supported_locales');
         $this->updateArrayLocaleNoId($site->installed_locales, ['es_MX', 'es_ES'], 'es', 'site', 'installed_locales');
-        $this->updateSingleValueLocaleNoId($site->primary_locale, ['es_MX', 'es_ES'], 'es', 'site', 'supported_locales');
+        $this->updateSingleValueLocaleNoId($site->primary_locale, ['es_MX', 'es_ES'], 'es', 'site', 'primary_locale');
         
         // users
         $users = DB::table('users')
