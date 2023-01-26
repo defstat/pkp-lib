@@ -44,9 +44,8 @@ class MergeLocalesMigration
         foreach($tables as $table) {
             $tableName = $table->{"Tables_in_$databaseName (%_settings)"};
             if (Schema::hasColumn($tableName, 'locale')) {
-                DB::table($tableName)->where('locale', 'like', 'es_%')->update(['locale' => 'es']);
+                DB::table($tableName)->update(['locale' => DB::raw("SUBSTR(locale, 1, 2)")]);
             }
-            
         }
 
         // Tables
@@ -55,63 +54,57 @@ class MergeLocalesMigration
             ->select(['supported_locales', 'installed_locales', 'primary_locale'])
             ->first();
 
-        $this->updateArrayLocaleNoId($site->supported_locales, ['es_MX', 'es_ES'], 'es', 'site', 'supported_locales');
-        $this->updateArrayLocaleNoId($site->installed_locales, ['es_MX', 'es_ES'], 'es', 'site', 'installed_locales');
-        $this->updateSingleValueLocaleNoId($site->primary_locale, ['es_MX', 'es_ES'], 'es', 'site', 'primary_locale');
+        $this->updateArrayLocaleNoId($site->supported_locales, 'site', 'supported_locales');
+        $this->updateArrayLocaleNoId($site->installed_locales, 'site', 'installed_locales');
+        $this->updateSingleValueLocaleNoId($site->primary_locale, 'site', 'primary_locale');
         
         // users
         $users = DB::table('users')
-            ->select('locales')
             ->get();
 
         foreach ($users as $user) {
-            $this->updateArrayLocale($user->locales, ['es_MX', 'es_ES'], 'es', 'users', 'locales', 'user_id', $user->user_id);
+            $this->updateArrayLocale($user->locales, 'users', 'locales', 'user_id', $user->user_id);
         }
 
         // submissions
         $submissions = DB::table('submissions')
-            ->select('locale')
             ->get();
 
         foreach ($submissions as $submission) {
-            $this->updateSingleValueLocale($submission->locale, ['es_MX', 'es_ES'], 'es', 'submissions', 'locale', 'submission_id', $submission->submission_id);
+            $this->updateSingleValueLocale($submission->locale, 'submissions', 'locale', 'submission_id', $submission->submission_id);
         }
         
         // publication_galleys
         $publicationGalleys = DB::table('publication_galleys')
-            ->select('locale')
             ->get();
 
         foreach ($publicationGalleys as $publicationGalley) {
-            $this->updateSingleValueLocale($publicationGalley->locale, ['es_MX', 'es_ES'], 'es', 'publication_galleys', 'locale', 'galley_id', $publicationGalley->galley_id);
+            $this->updateSingleValueLocale($publicationGalley->locale, 'publication_galleys', 'locale', 'galley_id', $publicationGalley->galley_id);
         }
 
         // email_templates_default_data
         $emailTemplatesDefaultData = DB::table('email_templates_default_data')
-            ->select('locale')
             ->get();
 
         foreach ($emailTemplatesDefaultData as $emailTemplatesDefaultDataCurrent) {
-            $this->updateSingleValueLocaleEmailData($emailTemplatesDefaultDataCurrent->locale, ['es_MX', 'es_ES'], 'es', 'email_templates_default_data', 'locale', 'email_key', $emailTemplatesDefaultDataCurrent->email_key);
+            $this->updateSingleValueLocaleEmailData($emailTemplatesDefaultDataCurrent->locale, 'email_templates_default_data', 'locale', 'email_key', $emailTemplatesDefaultDataCurrent->email_key);
         }
 
         // Those should not be here - I added them here just for demonstration purposes
         // journals
         $journals = DB::table('journals')
-            ->select('primary_locale')
             ->get();
 
         foreach ($journals as $journal) {
-            $this->updateSingleValueLocale($journal->primary_locale, ['es_MX', 'es_ES'], 'es', 'journals', 'primary_locale', 'journal_id', $journal->journal_id);
+            $this->updateSingleValueLocale($journal->primary_locale, 'journals', 'primary_locale', 'journal_id', $journal->journal_id);
         }
 
         // issue_galleys
         $issueGalleys = DB::table('issue_galleys')
-            ->select('locale')
             ->get();
 
         foreach ($issueGalleys as $issueGalley) {
-            $this->updateSingleValueLocale($issueGalley->locale, ['es_MX', 'es_ES'], 'es', 'issue_galleys', 'locale', 'galley_id', $issueGalley->galley_id);
+            $this->updateSingleValueLocale($issueGalley->locale, 'issue_galleys', 'locale', 'galley_id', $issueGalley->galley_id);
         }
 
         // journal_settings
@@ -120,22 +113,18 @@ class MergeLocalesMigration
             ->get();
 
         foreach ($journalSettingsFormLocales as $journalSettingsFormLocale) {
-            $this->updateArrayLocaleSetting($journalSettingsFormLocale->setting_value, ['es_MX', 'es_ES'], 'es', 'journal_settings', 'primary_locale', 'journal_id', $journalSettingsFormLocale->journal_id);
+            $this->updateArrayLocaleSetting($journalSettingsFormLocale->setting_value, 'journal_settings', 'primary_locale', 'journal_id', $journalSettingsFormLocale->journal_id);
         }
     }
 
-    function updateArrayLocaleNoId(string $dbLocales, array $locales, string $targetLocale, string $table, string $column) 
+    function updateArrayLocaleNoId(string $dbLocales, string $table, string $column) 
     {
         $siteSupportedLocales = json_decode($dbLocales);
 
         if ($siteSupportedLocales !== false) {
             $newLocales = [];
             foreach ($siteSupportedLocales as $siteSupportedLocale) {
-                if (in_array($siteSupportedLocale, $locales)) {
-                    $newLocales[] = $targetLocale;
-                } else {
-                    $newLocales[] = $siteSupportedLocale;
-                }
+                $newLocales[] = substr($siteSupportedLocale, 0, 2);
             }
 
             DB::table($table)
@@ -145,18 +134,14 @@ class MergeLocalesMigration
         }
     }
 
-    function updateArrayLocale(string $dbLocales, array $locales, string $targetLocale, string $table, string $column, string $tableKeyColumn, int $id) 
+    function updateArrayLocale(string $dbLocales, string $table, string $column, string $tableKeyColumn, int $id) 
     {
         $siteSupportedLocales = json_decode($dbLocales);
 
         if ($siteSupportedLocales !== false) {
             $newLocales = [];
             foreach ($siteSupportedLocales as $siteSupportedLocale) {
-                if (in_array($siteSupportedLocale, $locales)) {
-                    $newLocales[] = $targetLocale;
-                } else {
-                    $newLocales[] = $siteSupportedLocale;
-                }
+                $newLocales[] = substr($siteSupportedLocale, 0, 2);
             }
 
             DB::table($table)
@@ -167,18 +152,14 @@ class MergeLocalesMigration
         }
     }
 
-    function updateArrayLocaleSetting(string $dbLocales, array $locales, string $targetLocale, string $table, string $settingValue, string $tableKeyColumn, int $id) 
+    function updateArrayLocaleSetting(string $dbLocales, string $table, string $settingValue, string $tableKeyColumn, int $id) 
     {
         $siteSupportedLocales = json_decode($dbLocales);
 
         if ($siteSupportedLocales !== false) {
             $newLocales = [];
             foreach ($siteSupportedLocales as $siteSupportedLocale) {
-                if (in_array($siteSupportedLocale, $locales)) {
-                    $newLocales[] = $targetLocale;
-                } else {
-                    $newLocales[] = $siteSupportedLocale;
-                }
+                $newLocales[] = substr($siteSupportedLocale, 0, 2);
             }
 
             DB::table($table)
@@ -190,37 +171,31 @@ class MergeLocalesMigration
         }
     }
 
-    function updateSingleValueLocale(string $localevalue, array $locales, string $targetLocale, string $table, string $column, string $tableKeyColumn, int $id) 
+    function updateSingleValueLocale(string $localevalue, string $table, string $column, string $tableKeyColumn, int $id) 
     {
-        if (in_array($localevalue, $locales)) {
-            DB::table($table)
-                ->where($tableKeyColumn, '=', $id)
-                ->update([
-                    $column => $targetLocale
-                ]);
-        }
+        DB::table($table)
+            ->where($tableKeyColumn, '=', $id)
+            ->update([
+                $column => substr($localevalue, 0, 2)
+            ]);
     }
 
-    function updateSingleValueLocaleNoId(string $localevalue, array $locales, string $targetLocale, string $table, string $column) 
+    function updateSingleValueLocaleNoId(string $localevalue, string $table, string $column) 
     {
-        if (in_array($localevalue, $locales)) {
-            DB::table($table)
-                ->update([
-                    $column => $targetLocale
-                ]);
-        }
+        DB::table($table)
+            ->update([
+                $column => substr($localevalue, 0, 2)
+            ]);
     }
 
-    function updateSingleValueLocaleEmailData(string $localevalue, array $locales, string $targetLocale, string $table, string $column, string $tableKeyColumn, int $id) 
+    function updateSingleValueLocaleEmailData(string $localevalue, string $table, string $column, string $tableKeyColumn, string $id) 
     {
-        if (in_array($localevalue, $locales)) {
-            DB::table($table)
-                ->where($tableKeyColumn, '=', $id)
-                ->where($column, '=', $localevalue)
-                ->update([
-                    $column => $targetLocale
-                ]);
-        }
+        DB::table($table)
+            ->where($tableKeyColumn, '=', $id)
+            ->where($column, '=', $localevalue)
+            ->update([
+                $column => substr($localevalue, 0, 2)
+            ]);
     }
 
     /**
