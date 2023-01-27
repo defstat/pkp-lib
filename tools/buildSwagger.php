@@ -65,7 +65,7 @@ class buildSwagger extends \PKP\cliTool\CommandLineTool
                 exit;
             }
 
-            $locales = ['en_US', 'fr_CA'];
+            $locales = ['en', 'fr'];
 
             $apiSchema = json_decode($source);
             foreach ($apiSchema->definitions as $definitionName => $definition) {

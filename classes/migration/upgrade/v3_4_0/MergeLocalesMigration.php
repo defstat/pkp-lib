@@ -7,26 +7,32 @@
  * Copyright (c) 2000-2021 John Willinsky
  * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
  *
- * @class I7191_SubmissionChecklistMigration
- * @brief Migrate the submissionChecklist setting from an array to a HTML string
+ * @class MergeLocalesMigration
+ * @brief Change Locales from locale_countryCode localization folder notation to locale localization folder notation
  */
 
 namespace PKP\migration\upgrade\v3_4_0;
 
-
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use PKP\install\DowngradeNotSupportedException;
 
-// abstract class MergeLocalesMigration extends \PKP\migration\Migration
-class MergeLocalesMigration
+abstract class MergeLocalesMigration extends \PKP\migration\Migration
 {
+    protected string $CONTEXT_TABLE = '';
+    protected string $CONTEXT_SETTINGS_TABLE = '';
+    protected string $CONTEXT_COLUMN = '';
     /**
      * Run the migrations.
      */
     public function up(): void
     {
+        if (empty($this->CONTEXT_TABLE) || empty($this->CONTEXT_SETTINGS_TABLE) || empty($this->CONTEXT_COLUMN)) {
+            throw new Exception('Upgrade could not be completed because required properties for the MergeLocalesMigration migration are undefined.');
+        }
+
         $tables = null;
 
         $databaseName = DB::getDatabaseName();
@@ -90,46 +96,36 @@ class MergeLocalesMigration
             $this->updateSingleValueLocaleEmailData($emailTemplatesDefaultDataCurrent->locale, 'email_templates_default_data', 'locale', 'email_key', $emailTemplatesDefaultDataCurrent->email_key);
         }
 
-        // Those should not be here - I added them here just for demonstration purposes
-        // journals
-        $journals = DB::table('journals')
+        // Context
+        $contexts = DB::table($this->CONTEXT_TABLE)
             ->get();
 
-        foreach ($journals as $journal) {
-            $this->updateSingleValueLocale($journal->primary_locale, 'journals', 'primary_locale', 'journal_id', $journal->journal_id);
+        foreach ($contexts as $context) {
+            $this->updateSingleValueLocale($context->primary_locale, $this->CONTEXT_TABLE, 'primary_locale', $this->CONTEXT_COLUMN, $context->{$this->CONTEXT_COLUMN});
         }
 
-        // issue_galleys
-        $issueGalleys = DB::table('issue_galleys')
-            ->get();
-
-        foreach ($issueGalleys as $issueGalley) {
-            $this->updateSingleValueLocale($issueGalley->locale, 'issue_galleys', 'locale', 'galley_id', $issueGalley->galley_id);
-        }
-
-        // journal_settings
-        $journalSettingsFormLocales = DB::table('journal_settings')
+        $journalSettingsFormLocales = DB::table($this->CONTEXT_SETTINGS_TABLE)
             ->where('setting_name', '=', 'supportedFormLocales')
             ->get();
 
         foreach ($journalSettingsFormLocales as $journalSettingsFormLocale) {
-            $this->updateArrayLocaleSetting($journalSettingsFormLocale->setting_value, 'journal_settings', 'supportedFormLocales', 'journal_id', $journalSettingsFormLocale->journal_id);
+            $this->updateArrayLocaleSetting($journalSettingsFormLocale->setting_value, $this->CONTEXT_SETTINGS_TABLE, 'supportedFormLocales', $this->CONTEXT_COLUMN, $context->{$this->CONTEXT_COLUMN});
         }
 
-        $journalSettingsFormLocales = DB::table('journal_settings')
+        $journalSettingsFormLocales = DB::table($this->CONTEXT_SETTINGS_TABLE)
             ->where('setting_name', '=', 'supportedLocales')
             ->get();
 
         foreach ($journalSettingsFormLocales as $journalSettingsFormLocale) {
-            $this->updateArrayLocaleSetting($journalSettingsFormLocale->setting_value, 'journal_settings', 'supportedLocales', 'journal_id', $journalSettingsFormLocale->journal_id);
+            $this->updateArrayLocaleSetting($journalSettingsFormLocale->setting_value, $this->CONTEXT_SETTINGS_TABLE, 'supportedLocales', $this->CONTEXT_COLUMN, $context->{$this->CONTEXT_COLUMN});
         }
 
-        $journalSettingsFormLocales = DB::table('journal_settings')
+        $journalSettingsFormLocales = DB::table($this->CONTEXT_SETTINGS_TABLE)
             ->where('setting_name', '=', 'supportedSubmissionLocales')
             ->get();
 
         foreach ($journalSettingsFormLocales as $journalSettingsFormLocale) {
-            $this->updateArrayLocaleSetting($journalSettingsFormLocale->setting_value, 'journal_settings', 'supportedSubmissionLocales', 'journal_id', $journalSettingsFormLocale->journal_id);
+            $this->updateArrayLocaleSetting($journalSettingsFormLocale->setting_value, $this->CONTEXT_SETTINGS_TABLE, 'supportedSubmissionLocales', $this->CONTEXT_COLUMN, $context->{$this->CONTEXT_COLUMN});
         }
     }
 
