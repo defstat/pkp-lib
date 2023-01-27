@@ -113,7 +113,23 @@ class MergeLocalesMigration
             ->get();
 
         foreach ($journalSettingsFormLocales as $journalSettingsFormLocale) {
-            $this->updateArrayLocaleSetting($journalSettingsFormLocale->setting_value, 'journal_settings', 'primary_locale', 'journal_id', $journalSettingsFormLocale->journal_id);
+            $this->updateArrayLocaleSetting($journalSettingsFormLocale->setting_value, 'journal_settings', 'supportedFormLocales', 'journal_id', $journalSettingsFormLocale->journal_id);
+        }
+
+        $journalSettingsFormLocales = DB::table('journal_settings')
+            ->where('setting_name', '=', 'supportedLocales')
+            ->get();
+
+        foreach ($journalSettingsFormLocales as $journalSettingsFormLocale) {
+            $this->updateArrayLocaleSetting($journalSettingsFormLocale->setting_value, 'journal_settings', 'supportedLocales', 'journal_id', $journalSettingsFormLocale->journal_id);
+        }
+
+        $journalSettingsFormLocales = DB::table('journal_settings')
+            ->where('setting_name', '=', 'supportedSubmissionLocales')
+            ->get();
+
+        foreach ($journalSettingsFormLocales as $journalSettingsFormLocale) {
+            $this->updateArrayLocaleSetting($journalSettingsFormLocale->setting_value, 'journal_settings', 'supportedSubmissionLocales', 'journal_id', $journalSettingsFormLocale->journal_id);
         }
     }
 
