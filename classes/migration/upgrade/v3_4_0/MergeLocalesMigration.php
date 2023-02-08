@@ -40,10 +40,17 @@ abstract class MergeLocalesMigration extends \PKP\migration\Migration
         foreach($settingsTables as $settingsTable) {
             if (Schema::hasColumn($settingsTable, 'locale')) {
                 $affectedLocales = $this->getAffectedLocales();
-                foreach($affectedLocales as $affectedLocale) {
-                    DB::table($settingsTable)
-                        ->where('locale', 'like', $affectedLocale . '_%')
-                        ->update(['locale' => $affectedLocale]);
+                foreach($affectedLocales as $affectedLocale => $toLocale) {
+                    if (!isset($toLocale)) {
+                        DB::table($settingsTable)
+                            ->where('locale', 'like', $affectedLocale . '_%')
+                            ->update(['locale' => $affectedLocale]);
+                    } else {
+                        DB::table($settingsTable)
+                            ->where('locale', 'like', $affectedLocale)
+                            ->update(['locale' => $toLocale]);
+                    }
+                    
                 }
             }
         }
@@ -122,10 +129,11 @@ abstract class MergeLocalesMigration extends \PKP\migration\Migration
         if ($siteSupportedLocales !== false) {
             $newLocales = [];
             foreach ($siteSupportedLocales as $siteSupportedLocale) {
-                if ($this->checkIfLocaleValueIsAffected($siteSupportedLocale)) {
-                    $localeCode = substr($siteSupportedLocale, 0, 2);
-                    if (!in_array($localeCode, $newLocales)) {
-                        $newLocales[] = $localeCode;
+                $updatedLocale = $this->getUpdatedLocale($siteSupportedLocale);
+                
+                if ($updatedLocale) {
+                    if (!in_array($updatedLocale, $newLocales)) {
+                        $newLocales[] = $updatedLocale;
                     }
                 } else {
                     $newLocales[] = $siteSupportedLocale;
@@ -146,10 +154,11 @@ abstract class MergeLocalesMigration extends \PKP\migration\Migration
         if ($siteSupportedLocales !== false) {
             $newLocales = [];
             foreach ($siteSupportedLocales as $siteSupportedLocale) {
-                if ($this->checkIfLocaleValueIsAffected($siteSupportedLocale)) {
-                    $localeCode = substr($siteSupportedLocale, 0, 2);
-                    if (!in_array($localeCode, $newLocales)) {
-                        $newLocales[] = $localeCode;
+                $updatedLocale = $this->getUpdatedLocale($siteSupportedLocale);
+
+                if ($updatedLocale) {
+                    if (!in_array($updatedLocale, $newLocales)) {
+                        $newLocales[] = $updatedLocale;
                     }
                 } else {
                     $newLocales[] = $siteSupportedLocale;
@@ -171,10 +180,11 @@ abstract class MergeLocalesMigration extends \PKP\migration\Migration
         if ($siteSupportedLocales !== false) {
             $newLocales = [];
             foreach ($siteSupportedLocales as $siteSupportedLocale) {
-                if ($this->checkIfLocaleValueIsAffected($siteSupportedLocale)) {
-                    $localeCode = substr($siteSupportedLocale, 0, 2);
-                    if (!in_array($localeCode, $newLocales)) {
-                        $newLocales[] = $localeCode;
+                $updatedLocale = $this->getUpdatedLocale($siteSupportedLocale);
+
+                if ($updatedLocale) {
+                    if (!in_array($updatedLocale, $newLocales)) {
+                        $newLocales[] = $updatedLocale;
                     }
                 } else {
                     $newLocales[] = $siteSupportedLocale;
@@ -192,41 +202,66 @@ abstract class MergeLocalesMigration extends \PKP\migration\Migration
 
     function updateSingleValueLocale(string $localevalue, string $table, string $column, string $tableKeyColumn, int $id) 
     {
-        if ($this->checkIfLocaleValueIsAffected($localevalue)) {
+        $updatedLocale = $this->getUpdatedLocale($localevalue);
+
+        if ($updatedLocale) {
             DB::table($table)
                 ->where($tableKeyColumn, '=', $id)
                 ->update([
-                    $column => substr($localevalue, 0, 2)
+                    $column => $updatedLocale
                 ]);
         }
     }
 
     function updateSingleValueLocaleNoId(string $localevalue, string $table, string $column) 
     {
-        if ($this->checkIfLocaleValueIsAffected($localevalue)) {
+        $updatedLocale = $this->getUpdatedLocale($localevalue);
+
+        if ($updatedLocale) {
             DB::table($table)
                 ->update([
-                    $column => substr($localevalue, 0, 2)
+                    $column => $updatedLocale
                 ]);
         }
     }
 
     function updateSingleValueLocaleEmailData(string $localevalue, string $table, string $column, string $tableKeyColumn, string $id) 
     {
-        if ($this->checkIfLocaleValueIsAffected($localevalue)) {
+        $updatedLocale = $this->getUpdatedLocale($localevalue);
+
+        if ($updatedLocale) {
             DB::table($table)
                 ->where($tableKeyColumn, '=', $id)
                 ->where($column, '=', $localevalue)
                 ->update([
-                    $column => substr($localevalue, 0, 2)
+                    $column => $updatedLocale
                 ]);
         }
     }
 
-    function checkIfLocaleValueIsAffected(string $localeValue) {
-        $localeCode = substr($localeValue, 0, 2);
+    function getUpdatedLocale(string $localeValue) : ?string 
+    {
+        $affectedLocales = $this->getAffectedLocales();
 
-        return $this->getAffectedLocales()->contains($localeCode);
+        if ($affectedLocales->keys()->contains($localeValue)) {
+            return $affectedLocales->get($localeValue);
+        } else {
+            $localeCode = substr($localeValue, 0, 2);
+
+            if ($affectedLocales->keys()->contains($localeCode)) {
+                if ($affectedLocales->get($localeCode) == null) {
+                    $extension = "";
+                    if (strpos($localeValue, '@') !== false) {
+                        $extension = substr($localeValue, strpos($localeValue, '@'));
+                    }
+                    return $localeCode . $extension;
+                } else {
+                    return $affectedLocales->get($localeCode);
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -274,8 +309,58 @@ abstract class MergeLocalesMigration extends \PKP\migration\Migration
     protected function getAffectedLocales(): Collection
     {
         return collect([
-            'es',
-            'en'
+            'es' => null,
+            'en' => null,
+            'sr' => null,
+            'el' => null,
+            'de' => null,
+            'da' => null,
+            'cs' => null,
+            'ca' => null,
+            'bs' => null,
+            'bg' => null,
+            'be' => null,
+            'az' => null,
+            'ar' => null,
+            'fa' => null,
+            'fi' => null,
+            'gd' => null,
+            'gl' => null,
+            'he' => null,
+            'hi' => null,
+            'hr' => null,
+            'hu' => null,
+            'hy' => null,
+            'id' => null,
+            'is' => null,
+            'it' => null,
+            'ja' => null,
+            'ka' => null,
+            'kk' => null,
+            'ko' => null,
+            'ku' => null,
+            'lt' => null,
+            'lv' => null,
+            'mk' => null,
+            'mn' => null,
+            'ms' => null,
+            'nb' => null,
+            'nl' => null,
+            'pl' => null,
+            'ro' => null,
+            'ru' => null,
+            'si' => null,
+            'sk' => null,
+            'sl' => null,
+            'sv' => null,
+            'tr' => null,
+            'uk' => null,
+            'ur' => null,
+            'uz' => null,
+            'vi' => null,
+            'eu' => null,
+            'sw' => null,
+            'zh_TW' => 'zh_Hant'
         ]);
     }
 }
