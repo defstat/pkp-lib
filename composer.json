@@ -1,12 +1,12 @@
 {
 	"require": {
 		"php": "^8.2",
+		"ext-bcmath": "*",
+		"ext-gd": "*",
 		"ext-intl": "*",
 		"ext-mbstring": "*",
 		"ext-xml": "*",
 		"ext-zip": "*",
-		"ext-gd": "*",
-		"ext-bcmath": "*",
 		"altcha-org/altcha": "^0.1.2",
 		"composer/semver": "^3.4",
 		"cweagans/composer-patches": "^1.7",
@@ -28,6 +28,7 @@
 		"moxiecode/plupload": "2.*",
 		"mpdf/mpdf": "^8.2",
 		"phpmailer/phpmailer": "6.*",
+		"phpoffice/phpword": "^1.4",
 		"ralouphie/getallheaders": "*",
 		"smarty/smarty": "4.*",
 		"sokil/php-isocodes": "^4.1",
